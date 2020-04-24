@@ -1,0 +1,73 @@
+{
+  "name": "codenames",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": "10.16",
+    "yarn": "1.22"
+  },
+  "dependencies": {
+    "@material-ui/core": "^4.9.11",
+    "@material-ui/icons": "^4.9.1",
+    "@testing-library/jest-dom": "^4.2.4",
+    "@testing-library/react": "^9.3.2",
+    "@testing-library/user-event": "^7.1.2",
+    "@types/classnames": "^2.2.10",
+    "@types/lodash": "^4.14.150",
+    "@types/react-redux": "^7.1.7",
+    "classnames": "^2.2.6",
+    "firebase": "^7.14.1",
+    "immer": "^6.0.3",
+    "lodash": "^4.17.15",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-redux": "^7.2.0",
+    "react-scripts": "3.4.1",
+    "redux": "^4.0.5",
+    "redux-devtools-extension": "^2.13.8",
+    "redux-thunk": "^2.3.0",
+    "typescript": "^3.8.3"
+  },
+  "scripts": {
+    "start": "rescripts start",
+    "build": "rescripts build",
+    "test": "rescripts test",
+    "eject": "react-scripts eject",
+    "deploy": "firebase deploy --only hosting"
+  },
+  "rescripts": [
+    [
+      "use-babel-config",
+      {
+        "presets": [
+          "react-app",
+          [
+            "@babel/preset-typescript",
+            {
+              "allowNamespaces": true
+            }
+          ]
+        ]
+      }
+    ]
+  ],
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@rescripts/cli": "^0.0.14",
+    "@rescripts/rescript-use-babel-config": "^0.0.10"
+  }
+}

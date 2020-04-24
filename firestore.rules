@@ -1,0 +1,31 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /gameCards/{gameCardId} {
+      function playerInCurrentGame() {
+        return resource.data.gameId == get(/databases/$(database)/documents/players/$(request.auth.uid)).data.currentGameId
+      }
+      
+      allow read, update: if playerInCurrentGame();
+      allow create: if request.auth.uid != null;
+    }
+    
+    match /games/{gameId} {
+      allow read, write: if request.auth.uid != null;
+    }
+    
+    match /cards/{cardId} {
+      allow read: if true
+      allow write: if request.time < timestamp.date(2020, 5, 18);
+    }
+    
+    match /players/{playerId} {
+      allow read, update, delete: if request.auth.uid == playerId;
+      allow create: if request.auth.uid != null;
+    }
+    
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
