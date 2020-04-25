@@ -8,10 +8,6 @@
           "mode": "ASCENDING"
         },
         {
-          "fieldPath": "player",
-          "mode": "ASCENDING"
-        },
-        {
           "fieldPath": "order",
           "mode": "ASCENDING"
         }

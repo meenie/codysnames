@@ -7,14 +7,11 @@ import isEqual from 'lodash/isEqual';
 import { Store } from "../store/types";
 import { useDoc } from "../hooks/useDoc";
 import { db } from "../services/firebase";
-import { setGameData, setGameCardsData } from "../store/actions";
+import { setGameData } from "../store/actions";
 import GameBoard from "../components/GameBoard";
 import { leaveGame } from "../store/effects";
 import Lobby from "../components/Lobby";
-import { useCollection } from "../hooks/useCollection";
-import { getCurrentPlayerType } from "../store/selectors";
 import GameInfo from "../components/GameInfo";
-
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
   root: {
@@ -43,7 +40,6 @@ const Game: React.FC<{ gameId: string; }> = ({ gameId }) => {
   const dispatch = useDispatch();
 
   const game = useSelector((state: Store.ApplicationState) => state.game, isEqual);
-  const currentPlayerType = useSelector(getCurrentPlayerType);
   const leavingGame = useSelector((state: Store.ApplicationState) => state.loading.leavingGame);
   const startingGame = useSelector((state: Store.ApplicationState) => state.loading.startingGame);
 
@@ -52,17 +48,6 @@ const Game: React.FC<{ gameId: string; }> = ({ gameId }) => {
     {
       data: game => game ? dispatch(setGameData(game)) : dispatch(leaveGame()),
     }, [gameId]
-  )
-
-  useCollection<Store.GameCard>(
-    () => db
-      .collection('gameCards')
-      .where('gameId', '==', game.id)
-      .where('player', '==', currentPlayerType)
-      .orderBy('order', 'asc'),
-    {
-      data: gameCards => !leavingGame && gameCards && dispatch(setGameCardsData(gameCards)),
-    }, [game.id, currentPlayerType, leavingGame]
   )
 
   const gameLoaded = !!game.id;

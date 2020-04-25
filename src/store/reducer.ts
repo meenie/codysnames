@@ -27,6 +27,7 @@ export const initialState: Store.ApplicationState = {
   game: blankGame,
   player: blankPlayer,
   gameCards: [],
+  gameCardStateMap: {},
 };
 
 const reducer = (state = initialState, action: Store.ApplicationAction) => {
@@ -82,8 +83,26 @@ const reducer = (state = initialState, action: Store.ApplicationAction) => {
         draft.game = action.game;
       });
     case 'setGameCardsData':
+      if (state.loading.leavingGame) {
+        return state;
+      }
+
       return produce(state, (draft) => {
         draft.gameCards = action.gameCards;
+      });
+    case 'setGameCardStateMap':
+      if (state.loading.leavingGame) {
+        return state;
+      }
+
+      return produce(state, (draft) => {
+        draft.gameCardStateMap = action.gameCardState.reduce(
+          (acc, state) => ({
+            ...acc,
+            [state.id]: state,
+          }),
+          {}
+        );
       });
     case 'leaveGameRequest':
       return produce(state, (draft) => {
@@ -95,6 +114,7 @@ const reducer = (state = initialState, action: Store.ApplicationAction) => {
         draft.game = blankGame;
         draft.player.currentGameId = '';
         draft.gameCards = [];
+        draft.gameCardStateMap = {};
       });
     case 'startGameRequest':
       return produce(state, (draft) => {

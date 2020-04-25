@@ -80,6 +80,13 @@ export const setGameCardsData = (
   gameCards,
 });
 
+export const setGameCardStateMap = (
+  gameCardState: Store.GameCardState[]
+): Store.SetGameCardStateMap => ({
+  type: 'setGameCardStateMap',
+  gameCardState,
+});
+
 export const setUserId = (userId: string): Store.SetUserId => ({
   type: 'setUserId',
   userId,

@@ -55,7 +55,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
   }
 }))
 
-const GameCard: React.FC<{ card: Store.GameCard; }> = ({ card }) => {
+const GameCard: React.FC<{ card: Store.GameCardWithState }> = ({ card }) => {
   const currentPlayerType = useSelector((state: Store.ApplicationState) => {
     const userId = state.player.id;
     if (state.game.blueSpymaster.id === userId || state.game.redSpymaster.id === userId) {
@@ -70,18 +70,18 @@ const GameCard: React.FC<{ card: Store.GameCard; }> = ({ card }) => {
 
   const classes = useStyles();
   const paperClasses = classnames(classes.root, {
-    [classes.red]: (card.flipped || isSpymaster || gameOver) && card.type === Store.CardType.RedTeam,
-    [classes.blue]: (card.flipped || isSpymaster || gameOver) && card.type === Store.CardType.BlueTeam,
-    [classes.bystander]: (card.flipped || isSpymaster || gameOver) && card.type === Store.CardType.Bystander,
-    [classes.assassin]: (card.flipped || isSpymaster || gameOver) && card.type === Store.CardType.Assassin,
-    [classes.flipped]: card.flipped,
+    [classes.red]: (card.state.flipped || isSpymaster || gameOver) && card.state.type === Store.CardType.RedTeam,
+    [classes.blue]: (card.state.flipped || isSpymaster || gameOver) && card.state.type === Store.CardType.BlueTeam,
+    [classes.bystander]: (card.state.flipped || isSpymaster || gameOver) && card.state.type === Store.CardType.Bystander,
+    [classes.assassin]: (card.state.flipped || isSpymaster || gameOver) && card.state.type === Store.CardType.Assassin,
+    [classes.flipped]: card.state.flipped,
     [classes.fontSize30]: card.name.length >= 10,
     [classes.fontSize35]: card.name.length >= 8 && card.name.length < 10,
     [classes.fontSize45]: card.name.length < 8,
   })
   return (
     <Paper className={paperClasses} onClick={() => dispatch(flipCard(card))}>
-      {(!card.flipped || gameOver) && card.name}
+      {(!card.state.flipped || gameOver) && card.name}
     </Paper>
   );
 }

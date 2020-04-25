@@ -5,25 +5,61 @@ service cloud.firestore {
       function playerInCurrentGame() {
         return resource.data.gameId == get(/databases/$(database)/documents/players/$(request.auth.uid)).data.currentGameId
       }
-      
-      allow read, update: if playerInCurrentGame();
+
+      allow read: if playerInCurrentGame();
       allow create: if request.auth.uid != null;
+      allow update, delete: if false;
     }
-    
+
+    match /gameCardState/{gameCardStateId} {
+      function playerIsBlueSpymaster() {
+        return request.auth.uid == get(/databases/$(database)/documents/games/$(resource.data.gameId)).data.blueSpymaster.id
+      }
+
+      function playerIsRedSpymaster() {
+        return request.auth.uid == get(/databases/$(database)/documents/games/$(resource.data.gameId)).data.redSpymaster.id
+      }
+
+      function playerInCurrentGame() {
+        return resource.data.gameId == get(/databases/$(database)/documents/players/$(request.auth.uid)).data.currentGameId
+      }
+
+      function playerIsAgent() {
+        return playerInCurrentGame() && !playerIsBlueSpymaster() && !playerIsRedSpymaster()
+      }
+
+      function gameIsInSession() {
+        return get(/databases/$(database)/documents/games/$(resource.data.gameId)).data.status == 'IN_SESSION'
+      }
+
+      function gameIsOver() {
+        return getAfter(/databases/$(database)/documents/games/$(resource.data.gameId)).data.status == 'OVER'
+      }
+
+      function playerHasAccess() {
+        return playerInCurrentGame() && (playerIsBlueSpymaster() || playerIsRedSpymaster() || resource.data.flipped || gameIsOver())
+      }
+
+      function playerCanUpdateCard() {
+        return playerIsAgent() && gameIsInSession();
+      }
+
+      allow create: if request.auth.uid != null;
+      allow read: if playerHasAccess();
+      allow update: if playerCanUpdateCard();
+      allow delete: if false;
+    }
+
     match /games/{gameId} {
-      allow read, write: if request.auth.uid != null;
+      allow read, create, update: if request.auth.uid != null;
+      allow delete: if false;
     }
-    
-    match /cards/{cardId} {
-      allow read: if true
-      allow write: if request.time < timestamp.date(2020, 5, 18);
-    }
-    
+
     match /players/{playerId} {
       allow read, update, delete: if request.auth.uid == playerId;
       allow create: if request.auth.uid != null;
     }
-    
+
     match /{document=**} {
       allow read, write: if false;
     }

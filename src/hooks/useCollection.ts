@@ -1,9 +1,9 @@
-import flow from "lodash/flow";
-import { map, filter } from "lodash/fp";
-import { useEffect } from "react";
-import firebase from "firebase";
+import flow from 'lodash/flow';
+import { map, filter } from 'lodash/fp';
+import { useEffect } from 'react';
+import firebase from 'firebase';
 
-import { dataFromSnapshot } from "../helpers/firebase";
+import { dataFromSnapshot } from '../helpers/firebase';
 
 interface Entity {
   id: string;

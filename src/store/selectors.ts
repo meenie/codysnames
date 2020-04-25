@@ -25,3 +25,18 @@ export const getCurrentPlayerType = (state: Store.ApplicationState) => {
 
   return Store.PlayerType.Agent;
 };
+
+export const getGameCardsWithState = (
+  state: Store.ApplicationState
+): Store.GameCardWithState[] => {
+  const gameCardStateMap = state.gameCardStateMap;
+  return state.gameCards.map((card) => ({
+    ...card,
+    state: gameCardStateMap[card.id] || {
+      id: card.id,
+      flipped: false,
+      type: Store.CardType.Unkown,
+      gameId: card.gameId,
+    },
+  }));
+};

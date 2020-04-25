@@ -15,7 +15,6 @@ import {
   setPlayerNameError,
   setPlayerNameRequest,
   setPlayerNameSuccess,
-  setGameData,
   createGameCardsRequest,
   createGameCardsSuccess,
   leaveGameRequest,
@@ -233,9 +232,9 @@ export const flipCard = (card: Store.GameCard): Effect => async (dispatch, getSt
   const currentPlayerColor = getCurrentPlayerColor(state);
 
   if (
-    state.player.id === state.game.blueSpymaster.id || // Spymasters can't pick cards!
-    state.player.id === state.game.redSpymaster.id || // Spymasters can't pick cards!
-    currentTurn !== currentPlayerColor || // This isn't your team, man. You can't pick a card!
+    state.player.id === state.game.blueSpymaster.id || // Spymasters can't flip cards!
+    state.player.id === state.game.redSpymaster.id || // Spymasters can't flip cards!
+    currentTurn !== currentPlayerColor || // This isn't your team, man. You can't flip a card!
     state.game.status === Store.Status.Over // Game over, man! Game over!
   ) {
     return;
@@ -248,61 +247,75 @@ export const flipCard = (card: Store.GameCard): Effect => async (dispatch, getSt
     return;
   }
 
-  const agentGameCardRef = db.collection('gameCards').doc(card.id);
-  const agentGameCardSnapshot = await agentGameCardRef.get();
-  const agentGameCardData = agentGameCardSnapshot.data() as Store.GameCard;
-  const spymasterGameCardId = card.id.replace(
-    Store.PlayerType.Agent,
-    Store.PlayerType.Spymaster
-  );
-  const spymasterGameCardRef = db.collection('gameCards').doc(spymasterGameCardId);
-  const spymasterGameCardSnapshot = await spymasterGameCardRef.get();
-  const spymasterGameCardData = spymasterGameCardSnapshot.data() as Store.GameCard;
+  // We have to flip the card before we can read the data on the db to get the type.
+  const gameCardStateRef = db.collection('gameCardState').doc(card.id);
+  await gameCardStateRef.update({
+    flipped: true,
+    whoFlippedIt: state.player,
+  });
 
-  if (!spymasterGameCardData || !agentGameCardData) {
-    return;
-  }
+  const gameCardStateSnapshot = await gameCardStateRef.get();
+  const gameCardStateData = gameCardStateSnapshot.data() as Store.GameCardState;
 
-  // Flip them both!
-  agentGameCardData.flipped = spymasterGameCardData.flipped = true;
-  // Reveal the type for the agent!
-  agentGameCardData.type = spymasterGameCardData.type;
-
-  const batch = db.batch();
-
-  batch.set(agentGameCardRef, agentGameCardData);
-  batch.set(spymasterGameCardRef, spymasterGameCardData);
-
-  await batch.commit();
-
-  const agentGameCardsRef = db
+  const gameCardsRef = db
     .collection('gameCards')
     .where('gameId', '==', gameData.id)
-    .where('player', '==', Store.PlayerType.Agent)
     .orderBy('order', 'asc');
-  const agentGameCardsSnapshot = await agentGameCardsRef.get();
-  const agentGameCards = agentGameCardsSnapshot.docs.map(
+  const gameCardsQuerySnapshot = await gameCardsRef.get();
+  const gameCards = gameCardsQuerySnapshot.docs.map(
     (doc) => doc.data() as Store.GameCard
   );
-  const blueCardsFlipped = agentGameCards.filter(
-    (card) => card.type === Store.CardType.BlueTeam && card.flipped
+
+  let gameCardStateQuery = db
+    .collection('gameCardState')
+    .where('gameId', '==', gameData.id)
+    .where('flipped', '==', true);
+
+  const gameCardStateQuerySnapshot = await gameCardStateQuery.get();
+  const gameCardStateCollection = gameCardStateQuerySnapshot.docs.map(
+    (doc) => doc.data() as Store.GameCardState
   );
-  const redCardsFlipped = agentGameCards.filter(
-    (card) => card.type === Store.CardType.RedTeam && card.flipped
+  const flippedGameCardStateMap = gameCards.reduce(
+    (acc, card) => {
+      const state = gameCardStateCollection.find((cardState) => cardState.id === card.id);
+      return {
+        ...acc,
+        [card.id]: state || {
+          id: card.id,
+          flipped: false,
+          gameId: card.gameId,
+          type: Store.CardType.Unkown,
+        },
+      };
+    },
+    {} as {
+      [id: string]: Store.GameCardState;
+    }
+  );
+
+  const blueCardsFlipped = gameCards.filter(
+    (card) =>
+      flippedGameCardStateMap[card.id].type === Store.CardType.BlueTeam &&
+      flippedGameCardStateMap[card.id].flipped
+  );
+  const redCardsFlipped = gameCards.filter(
+    (card) =>
+      flippedGameCardStateMap[card.id].type === Store.CardType.RedTeam &&
+      flippedGameCardStateMap[card.id].flipped
   );
   const blueCardWinCount = gameData.doubleAgent === Store.TeamColor.Blue ? 9 : 8;
   const redCardWinCount = gameData.doubleAgent === Store.TeamColor.Red ? 9 : 8;
 
   const newGameData = produce(gameData as Store.Game, (draft) => {
-    if (agentGameCardData.type === Store.CardType.Assassin) {
+    if (gameCardStateData.type === Store.CardType.Assassin) {
       draft.status = Store.Status.Over;
       draft.whoWon =
         currentTurn === Store.TeamColor.Blue ? Store.TeamColor.Red : Store.TeamColor.Blue;
-    } else if (agentGameCardData.type === Store.CardType.Bystander) {
+    } else if (gameCardStateData.type === Store.CardType.Bystander) {
       draft.turn =
         currentTurn === Store.TeamColor.Blue ? Store.TeamColor.Red : Store.TeamColor.Blue;
     } else if (currentTurn === Store.TeamColor.Blue) {
-      if (agentGameCardData.type === Store.CardType.RedTeam) {
+      if (gameCardStateData.type === Store.CardType.RedTeam) {
         draft.turn = Store.TeamColor.Red;
       }
 
@@ -311,7 +324,7 @@ export const flipCard = (card: Store.GameCard): Effect => async (dispatch, getSt
         draft.whoWon = Store.TeamColor.Blue;
       }
     } else if (currentTurn === Store.TeamColor.Red) {
-      if (agentGameCardData.type === Store.CardType.BlueTeam) {
+      if (gameCardStateData.type === Store.CardType.BlueTeam) {
         draft.turn = Store.TeamColor.Blue;
       }
 
@@ -323,28 +336,6 @@ export const flipCard = (card: Store.GameCard): Effect => async (dispatch, getSt
   });
 
   await db.collection('games').doc(gameData.id).set(newGameData);
-
-  // If the game is over, reveal all the cards for the agents.
-  if (newGameData.status === Store.Status.Over) {
-    const spymasterGameCardsRef = db
-      .collection('gameCards')
-      .where('gameId', '==', gameData.id)
-      .where('player', '==', Store.PlayerType.Spymaster)
-      .orderBy('order', 'asc');
-
-    const spymasterGameCardsSnapshot = await spymasterGameCardsRef.get();
-    const spymasterGameCards = spymasterGameCardsSnapshot.docs.map(
-      (doc) => doc.data() as Store.GameCard
-    );
-
-    const batch = db.batch();
-    agentGameCards.forEach((card, i) => {
-      card.type = spymasterGameCards[i].type;
-      batch.set(db.collection('gameCards').doc(card.id), card);
-    });
-
-    await batch.commit();
-  }
 };
 
 export const joinGame = (gameId: string): Effect => async (dispatch, getState) => {
@@ -455,35 +446,25 @@ export const createGameCards = (
     whoIsFirst === Store.TeamColor.Blue ? Store.CardType.BlueTeam : Store.CardType.RedTeam
   );
 
-  const spymasterGameCardsData: Store.GameCard[] = [];
   cardNames.forEach((name, i) => {
-    const newCardId = db.collection('gameCards').doc().id;
-    const agentCardId = `${Store.PlayerType.Agent}-${newCardId}`;
-    const spymasterCardId = `${Store.PlayerType.Spymaster}-${newCardId}`;
-    const agentGameCardRef = db.collection('gameCards').doc(agentCardId);
-    const spymasterGameCardRef = db.collection('gameCards').doc(spymasterCardId);
+    const gameCardRef = db.collection('gameCards').doc();
+    const gameCardStateRef = db.collection('gameCardState').doc(gameCardRef.id);
 
     const gameCardData = {
-      id: agentGameCardRef.id,
-      flipped: false,
+      id: gameCardRef.id,
       gameId,
       name,
       order: i,
-      type: Store.CardType.Unkown,
-      player: Store.PlayerType.Agent,
-      siblingId: spymasterGameCardRef.id,
+    };
+    const gameCardStateData = {
+      id: gameCardRef.id,
+      type: cardTypeMap[i],
+      flipped: false,
+      gameId,
     };
 
-    batch.set(agentGameCardRef, gameCardData);
-    const spymasterGameCardData = {
-      ...gameCardData,
-      id: spymasterGameCardRef.id,
-      type: cardTypeMap[i],
-      player: Store.PlayerType.Spymaster,
-      siblingId: agentGameCardRef.id,
-    };
-    batch.set(spymasterGameCardRef, spymasterGameCardData);
-    spymasterGameCardsData.push(spymasterGameCardData);
+    batch.set(gameCardRef, gameCardData);
+    batch.set(gameCardStateRef, gameCardStateData);
   });
 
   await batch.commit();
@@ -543,7 +524,6 @@ export const createGame = (): Effect => async (dispatch, getState) => {
     batch.set(playerRef, newPlayerData);
 
     await batch.commit();
-    dispatch(setGameData(gameData));
 
     return dispatch(createGameSuccess(gameData.id));
   } catch (e) {

@@ -13,13 +13,21 @@ export namespace Store {
 
   export interface GameCard {
     id: string;
-    flipped: boolean;
     gameId: string;
     name: string;
     order: number;
-    player: PlayerType;
+  }
+
+  export interface GameCardWithState extends GameCard {
+    state: GameCardState;
+  }
+
+  export interface GameCardState {
+    id: string;
+    flipped: boolean;
+    whoFlippedIt?: Player;
+    gameId: string;
     type: CardType;
-    siblingId: string;
   }
 
   export interface Game {
@@ -70,6 +78,7 @@ export namespace Store {
     loading: LoadingState;
     game: Game;
     gameCards: GameCard[];
+    gameCardStateMap: { [id: string]: GameCardState };
     player: Player;
   }
 
@@ -151,6 +160,11 @@ export namespace Store {
     gameCards: GameCard[];
   }
 
+  export interface SetGameCardStateMap extends Action {
+    type: 'setGameCardStateMap';
+    gameCardState: GameCardState[];
+  }
+
   export interface SetUserId extends Action {
     type: 'setUserId';
     userId: string;
@@ -206,6 +220,7 @@ export namespace Store {
     | PromotePlayerToSpymaster
     | SetGameData
     | SetGameCardsData
+    | SetGameCardStateMap
     | LeaveGameSuccess
     | LeaveGameRequest
     | StartGameRequest

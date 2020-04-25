@@ -8,7 +8,10 @@ import GameCard from "../components/GameCard";
 import { Store } from "../store/types";
 import { useDispatch, useSelector } from "react-redux";
 import { doneWithTurn } from "../store/effects";
-import { getCurrentPlayerType, getCurrentPlayerColor } from "../store/selectors";
+import { getCurrentPlayerType, getCurrentPlayerColor, getGameCardsWithState } from "../store/selectors";
+import { useCollection } from "../hooks/useCollection";
+import { setGameCardsData, setGameCardStateMap } from "../store/actions";
+import { db } from "../services/firebase";
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
   root: {
@@ -67,7 +70,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 const GameBoard: React.FC = () => {
   const classes = useStyles();
   const dispatch = useDispatch();
-  const cards = useSelector((state: Store.ApplicationState) => state.gameCards, isEqual);
+  const cards = useSelector(getGameCardsWithState, isEqual);
   const game = useSelector((state: Store.ApplicationState) => state.game, isEqual);
   const currentPlayerType = useSelector(getCurrentPlayerType);
   const currentPlayerColor = useSelector(getCurrentPlayerColor);
@@ -82,6 +85,36 @@ const GameBoard: React.FC = () => {
     [classes.redTurn]: whosTurn === Store.TeamColor.Red,
     [classes.blueTurn]: whosTurn === Store.TeamColor.Blue
   });
+
+  useCollection<Store.GameCard>(
+    () => db
+      .collection('gameCards')
+      .where('gameId', '==', game.id)
+      .orderBy('order', 'asc'),
+    {
+      data: gameCards => dispatch(setGameCardsData(gameCards)),
+    }, [game.id]
+  )
+
+  useCollection<Store.GameCardState>(
+    () => {
+      const query = db
+        .collection('gameCardState')
+        .where('gameId', '==', game.id)
+
+      if (
+        currentPlayerType === Store.PlayerType.Agent &&
+        game.status !== Store.Status.Over
+      ) {
+        return query.where('flipped', '==', true)
+      }
+
+      return query;
+    },
+    {
+      data: gameCardState => dispatch(setGameCardStateMap(gameCardState)),
+    }, [game.id, currentPlayerType, game.status]
+  )
 
   if (cards.length === 0) {
     return <p>&nbsp;</p>
