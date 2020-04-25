@@ -1,4 +1,4 @@
-name: Build and Deploy
+name: Build & Deploy
 on:
   push:
     branches:
@@ -6,7 +6,7 @@ on:
 
 jobs:
   build_and_deploy:
-    name: Build
+    name: Build & Deploy
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
