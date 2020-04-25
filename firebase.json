@@ -11,8 +11,7 @@
         "source": "**",
         "destination": "/index.html"
       }
-    ],
-    "predeploy": [ "yarn --cwd \"$RESOURCE_DIR\" run build" ]
+    ]
   },
   "emulators": {
     "firestore": {
