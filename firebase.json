@@ -3,35 +3,23 @@
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
-  "functions": {
-    "predeploy": [
-      "yarn --cwd \"$RESOURCE_DIR\" run lint",
-      "yarn --cwd \"$RESOURCE_DIR\" run build"
-    ]
-  },
   "hosting": {
     "public": "build",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "ignore": [ "firebase.json", "**/.*", "**/node_modules/**" ],
     "rewrites": [
       {
         "source": "**",
         "destination": "/index.html"
       }
     ],
-    "predeploy": ["yarn --cwd \"$RESOURCE_DIR\" run build"]
+    "predeploy": [ "yarn --cwd \"$RESOURCE_DIR\" run build" ]
   },
   "emulators": {
-    "functions": {
-      "port": 5001
-    },
     "firestore": {
       "port": 8080
     },
     "hosting": {
       "port": 5000
-    },
-    "pubsub": {
-      "port": 8085
     }
   }
 }
