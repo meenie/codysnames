@@ -1,5 +1,4 @@
 import { all, call, fork, takeEvery, put, select } from 'redux-saga/effects';
-import produce from 'immer';
 import shuffle from 'lodash/shuffle';
 
 import { db } from '../../services/firebase';
