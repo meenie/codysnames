@@ -10,8 +10,7 @@ import {
   ArrowUpward as ArrowUpwardIcon
 } from '@material-ui/icons';
 import { makeStyles, Theme, createStyles } from "@material-ui/core/styles";
-
-import { Store } from "../store/types";
+import { Player } from "../state/player/player.types";
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
   root: {},
@@ -32,12 +31,12 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 
 const Lobby: React.FC<{
   teamColor: 'red' | 'blue';
-  agents: Store.Player[];
-  spymaster: Store.Player;
+  agents: Player.Entity[];
+  spymaster: Player.Entity;
   teamName: string;
   showJoinTeamButton: boolean;
   showPromoteButton: boolean;
-  promoteToSpymaster: (player: Store.Player) => void;
+  promoteToSpymaster: (player: Player.Entity) => void;
   switchTeams: () => void;
 }> = ({
   teamColor,

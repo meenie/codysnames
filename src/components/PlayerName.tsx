@@ -3,10 +3,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Tooltip, Grid, TextField, Typography, IconButton } from '@material-ui/core';
 import { Edit as EditIcon } from '@material-ui/icons';
 import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
+import produce from "immer";
 
-import { setPlayerName } from '../store/effects';
-import { Store } from "../store/types";
-
+import { setPlayerData } from '../state/player/player.actions';
+import { Root } from "../state/root.types";
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
   title: {
@@ -21,10 +21,18 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 
 const PlayerName: React.FC = () => {
   const classes = useStyles();
-  const currentName = useSelector((state: Store.ApplicationState) => state.player.name);
+  const currentName = useSelector((state: Root.State) => state.player.data.name);
+  const player = useSelector((state: Root.State) => state.player.data);
   const [name, setName] = useState(currentName);
   const [editingName, setEditingName] = useState(!currentName);
   const dispatch = useDispatch();
+  const setPlayerName = (name: string) => {
+    const newPlayerData = produce(player, (draft) => {
+      draft.name = name;
+    })
+    dispatch(setPlayerData(newPlayerData));
+    setEditingName(false);
+  }
 
   return (
     <React.Fragment>
@@ -67,8 +75,7 @@ const PlayerName: React.FC = () => {
               onChange={(ev) => setName(ev.target.value.toUpperCase())}
               onKeyPress={(ev) => {
                 if (ev.key === 'Enter') {
-                  setEditingName(false);
-                  dispatch(setPlayerName(name))
+                  setPlayerName(name)
                   ev.preventDefault();
                 }
               }} />

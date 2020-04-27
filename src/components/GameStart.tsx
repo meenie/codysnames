@@ -3,8 +3,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { TextField, Button, Grid, Typography } from '@material-ui/core';
 import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
 
-import { createGame, joinGame } from '../store/effects';
-import { Store } from "../store/types";
+import { createGameRequest, joinGameRequest } from '../state/game/game.actions';
+import { Root } from "../state/root.types";
 
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
@@ -31,7 +31,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 const GameStart: React.FC = () => {
   const classes = useStyles();
   const [gameId, setGameId] = useState<string | undefined>();
-  const creatingGame = useSelector((state: Store.ApplicationState) => state.loading.game);
+  const creatingGame = useSelector((state: Root.State) => state.game.loading);
   const dispatch = useDispatch();
 
   return (
@@ -58,7 +58,7 @@ const GameStart: React.FC = () => {
             onChange={(ev) => setGameId(ev.target.value)}
             onKeyPress={(ev) => {
               if (ev.key === 'Enter' && gameId && gameId.length === 4) {
-                dispatch(joinGame(gameId))
+                dispatch(joinGameRequest(gameId))
                 ev.preventDefault();
               }
             }} />
@@ -70,7 +70,7 @@ const GameStart: React.FC = () => {
             variant="contained"
             fullWidth
             disabled={creatingGame}
-            onClick={() => dispatch(createGame())}
+            onClick={() => dispatch(createGameRequest())}
           >
             {creatingGame ? 'Creating Game...' : 'Create Game'}
           </Button>

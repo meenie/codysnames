@@ -3,14 +3,17 @@ import { Grid, Button, Box, Typography } from "@material-ui/core";
 import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
 import classnames from 'classnames';
 import isEqual from 'lodash/isEqual';
+import { useDispatch, useSelector } from "react-redux";
 
 import GameCard from "../components/GameCard";
-import { Store } from "../store/types";
-import { useDispatch, useSelector } from "react-redux";
-import { doneWithTurn } from "../store/effects";
-import { getCurrentPlayerType, getCurrentPlayerColor, getGameCardsWithState } from "../store/selectors";
+import { Root } from "../state/root.types";
+import { Game } from "../state/game/game.types";
+import { GameCard as IGameCard } from "../state/gameCard/gameCard.types";
+import { endTurnRequest } from "../state/game/game.actions";
+import { setGameCardsData, setGameCardStatesData } from "../state/gameCard/gameCard.actions";
+import { getCurrentPlayerType, getCurrentPlayerColor } from "../state/player/player.selectors";
+import { getGameCardsWithState } from "../state/gameCard/gameCard.selectors";
 import { useCollection } from "../hooks/useCollection";
-import { setGameCardsData, setGameCardStateMap } from "../store/actions";
 import { db } from "../services/firebase";
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
@@ -71,7 +74,7 @@ const GameBoard: React.FC = () => {
   const classes = useStyles();
   const dispatch = useDispatch();
   const cards = useSelector(getGameCardsWithState, isEqual);
-  const game = useSelector((state: Store.ApplicationState) => state.game, isEqual);
+  const game = useSelector((state: Root.State) => state.game.data, isEqual);
   const currentPlayerType = useSelector(getCurrentPlayerType);
   const currentPlayerColor = useSelector(getCurrentPlayerColor);
 
@@ -79,14 +82,14 @@ const GameBoard: React.FC = () => {
   const whosTurn = game.turn;
   const gameStatus = game.status;
   const yourTurn = currentPlayerColor === whosTurn;
-  const isSpymaster = currentPlayerType === Store.PlayerType.Spymaster;
+  const isSpymaster = currentPlayerType === Game.PlayerType.Spymaster;
 
   const turnClass = classnames({
-    [classes.redTurn]: whosTurn === Store.TeamColor.Red,
-    [classes.blueTurn]: whosTurn === Store.TeamColor.Blue
+    [classes.redTurn]: whosTurn === Game.TeamColor.Red,
+    [classes.blueTurn]: whosTurn === Game.TeamColor.Blue
   });
 
-  useCollection<Store.GameCard>(
+  useCollection<IGameCard.GameCardEntity>(
     () => db
       .collection('gameCards')
       .where('gameId', '==', game.id)
@@ -96,15 +99,15 @@ const GameBoard: React.FC = () => {
     }, [game.id]
   )
 
-  useCollection<Store.GameCardState>(
+  useCollection<IGameCard.GameCardStateEntity>(
     () => {
       const query = db
         .collection('gameCardState')
         .where('gameId', '==', game.id)
 
       if (
-        currentPlayerType === Store.PlayerType.Agent &&
-        game.status !== Store.Status.Over
+        currentPlayerType === Game.PlayerType.Agent &&
+        game.status !== Game.Status.Over
       ) {
         return query.where('flipped', '==', true)
       }
@@ -112,7 +115,7 @@ const GameBoard: React.FC = () => {
       return query;
     },
     {
-      data: gameCardState => dispatch(setGameCardStateMap(gameCardState)),
+      data: gameCardState => dispatch(setGameCardStatesData(gameCardState)),
     }, [game.id, currentPlayerType, game.status]
   )
 
@@ -123,7 +126,7 @@ const GameBoard: React.FC = () => {
   return (
     <Box className={classes.root}>
       {
-        gameStatus === Store.Status.Over &&
+        gameStatus === Game.Status.Over &&
         (
           <React.Fragment>
             <Typography variant="h4" className={classes.gameOver}>Game over, man! Game over!</Typography>
@@ -132,13 +135,13 @@ const GameBoard: React.FC = () => {
         )
       }
 
-      {gameStatus !== Store.Status.Over && (<Typography variant="h5" className={classes.whosTurn}>
+      {gameStatus !== Game.Status.Over && (<Typography variant="h5" className={classes.whosTurn}>
         Team Turn: <span className={turnClass}>{whosTurn}</span>&nbsp;&nbsp;
         {
           !isSpymaster && yourTurn && (
             <Button
               variant="outlined"
-              onClick={() => dispatch(doneWithTurn())}>
+              onClick={() => dispatch(endTurnRequest())}>
               Done With Turn
             </Button>
           )

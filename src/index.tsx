@@ -3,21 +3,24 @@ import ReactDOM from "react-dom";
 import CssBaseLine from "@material-ui/core/CssBaseline";
 import { ThemeProvider } from "@material-ui/core/styles";
 import { applyMiddleware, createStore } from "redux";
+import createSagaMiddleware from 'redux-saga';
 import { Provider } from "react-redux";
-import thunk from "redux-thunk";
 import { composeWithDevTools } from "redux-devtools-extension";
 
 import theme from './theme';
-import reducer, { initialState } from "./store/reducer";
+import reducer, { initialState } from "./state/root.reducers";
 import App from "./App";
 import * as serviceWorker from "./serviceWorker";
+import rootSaga from "./state/root.saga";
 
+const sagaMiddleware = createSagaMiddleware();
 const composeEnhancers = composeWithDevTools({});
 const store = createStore(
   reducer,
   initialState,
-  composeEnhancers(applyMiddleware(thunk))
+  composeEnhancers(applyMiddleware(sagaMiddleware))
 );
+sagaMiddleware.run(rootSaga);
 
 ReactDOM.render(
   <Provider store={store}>
