@@ -80,7 +80,7 @@ const getTeamForPlayer = (game: Game.Entity, player: Player.Entity) => {
 };
 
 export const getGameData = async (gameId: string) => {
-  const gameRef = db.collection('games').doc(gameId);
+  const gameRef = db.collection('games').doc(gameId.toLowerCase());
   const gameSnapshot = await gameRef.get();
   return gameSnapshot.data() as Game.Entity;
 };
@@ -233,7 +233,8 @@ function* leaveGame() {
     const gameData: Game.Entity = yield call(getGameData, player.currentGameId);
 
     if (!gameData) {
-      return;
+      // Game no longer exists so just say we left it
+      return yield put(leaveGameComplete(player.currentGameId));
     }
 
     const newGameData = produce(gameData, (draft) => {

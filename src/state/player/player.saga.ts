@@ -3,7 +3,12 @@ import { all, call, fork, takeEvery, put, select } from 'redux-saga/effects';
 import { db, auth, analytics } from '../../services/firebase';
 import { Player } from './player.types';
 import { Root } from '../root.types';
-import { signInPlayerComplete, signInPlayerError } from './player.actions';
+import {
+  signInPlayerComplete,
+  signInPlayerError,
+  setPlayerDataError,
+  setPlayerDataComplete,
+} from './player.actions';
 import { Game } from '../game/game.types';
 import produce from 'immer';
 
@@ -18,7 +23,7 @@ const signInAnonymously = async () => {
   return user && user.uid;
 };
 
-const setPlayerData = async (player: Player.Entity) => {
+const savePlayerData = async (player: Player.Entity) => {
   const playerRef = db.collection('players').doc(player.id);
 
   return playerRef.update(player);
@@ -42,6 +47,15 @@ const getPlayerData = async (userId: string) => {
   return playerData;
 };
 
+function* setPlayerData(action: Player.SetPlayerDataRequest) {
+  try {
+    yield call(savePlayerData, action.player);
+    yield put(setPlayerDataComplete(action.player));
+  } catch (e) {
+    yield put(setPlayerDataError(e));
+  }
+}
+
 function* signInPlayer() {
   try {
     const userId = yield call(signInAnonymously);
@@ -54,22 +68,24 @@ function* signInPlayer() {
 
 function* persistCurrentGameId(action: Game.JoinGameComplete | Game.CreateGameComplete) {
   const player: Player.Entity = yield select((state: Root.State) => state.player.data);
-  yield call(
-    setPlayerData,
-    produce(player, (draft) => {
-      draft.currentGameId = action.gameId;
-    })
-  );
+  const newPlayerData = produce(player, (draft) => {
+    draft.currentGameId = action.gameId;
+  });
+  yield call(savePlayerData, newPlayerData);
+  yield put(setPlayerDataComplete(newPlayerData));
 }
 
 function* unsetCurrentGameId(action: Game.LeaveGameComplete) {
   const player: Player.Entity = yield select((state: Root.State) => state.player.data);
-  yield call(
-    setPlayerData,
-    produce(player, (draft) => {
-      draft.currentGameId = '';
-    })
-  );
+  const newPlayerData = produce(player, (draft) => {
+    draft.currentGameId = '';
+  });
+  yield call(savePlayerData, newPlayerData);
+  yield put(setPlayerDataComplete(newPlayerData));
+}
+
+function* setPlayerDataListener() {
+  yield takeEvery(Player.ActionTypes.SetPlayerDataRequest, setPlayerData);
 }
 
 function* persistCurrentGameIdListener() {
@@ -89,6 +105,7 @@ function* signInPlayerListener() {
 
 export function* playerSaga() {
   yield all([
+    fork(setPlayerDataListener),
     fork(signInPlayerListener),
     fork(persistCurrentGameIdListener),
     fork(unsetCurrentGameIdListener),

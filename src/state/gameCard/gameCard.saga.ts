@@ -42,9 +42,9 @@ export const getGameCardStates = async (gameId: string, flipped = true) => {
   );
 };
 
-const setGameCardStateData = async (gameCardState: GameCard.GameCardStateEntity) => {
+const setGameCardStateData = async (gameCardState: any) => {
   const gameCardStateRef = db.collection('gameCardState').doc(gameCardState.id);
-  return await gameCardStateRef.set(gameCardState);
+  return await gameCardStateRef.update(gameCardState);
 };
 
 const setGameCardsData = async (gameCards: GameCard.Entity) => {
@@ -118,7 +118,7 @@ function* createGameCards(action: Game.StartGameComplete) {
 }
 
 function* flipGameCard(action: GameCard.FlipGameCardRequest) {
-  const gameId: string = yield select((state: Root.State) => state.game.data);
+  const gameId: string = yield select((state: Root.State) => state.game.data.id);
   const gameData: Game.Entity = yield call(getGameData, gameId);
   const player: Player.Entity = yield select((state: Root.State) => state.player.data);
   const currentPlayerColor: Game.TeamColor = yield select(getCurrentPlayerColor);
@@ -134,13 +134,11 @@ function* flipGameCard(action: GameCard.FlipGameCardRequest) {
     return;
   }
 
-  yield call(
-    setGameCardStateData,
-    produce(cardState, (draft) => {
-      draft.flipped = true;
-      draft.whoFlippedIt = player;
-    })
-  );
+  yield call(setGameCardStateData, {
+    id: cardState.id,
+    flipped: true,
+    whoFlippedIt: player,
+  });
 
   yield put(flipGameCardComplete(cardState.id));
 }

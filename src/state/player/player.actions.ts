@@ -1,8 +1,22 @@
 import { Player } from './player.types';
 
-export const setPlayerData = (player: Player.Entity): Player.SetPlayerData => ({
-  type: Player.ActionTypes.SetPlayerData,
+export const setPlayerDataRequest = (
+  player: Player.Entity
+): Player.SetPlayerDataRequest => ({
+  type: Player.ActionTypes.SetPlayerDataRequest,
   player,
+});
+
+export const setPlayerDataComplete = (
+  player: Player.Entity
+): Player.SetPlayerDataComplete => ({
+  type: Player.ActionTypes.SetPlayerDataComplete,
+  player,
+});
+
+export const setPlayerDataError = (error: Error): Player.SetPlayerDataError => ({
+  type: Player.ActionTypes.SetPlayerDataError,
+  error,
 });
 
 export const signInPlayerRequest = (): Player.SignInPlayerRequest => ({

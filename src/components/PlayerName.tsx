@@ -5,7 +5,7 @@ import { Edit as EditIcon } from '@material-ui/icons';
 import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
 import produce from "immer";
 
-import { setPlayerData } from '../state/player/player.actions';
+import { setPlayerDataRequest } from '../state/player/player.actions';
 import { Root } from "../state/root.types";
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
@@ -30,7 +30,7 @@ const PlayerName: React.FC = () => {
     const newPlayerData = produce(player, (draft) => {
       draft.name = name;
     })
-    dispatch(setPlayerData(newPlayerData));
+    dispatch(setPlayerDataRequest(newPlayerData));
     setEditingName(false);
   }
 

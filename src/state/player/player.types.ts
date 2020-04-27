@@ -19,7 +19,9 @@ export namespace Player {
     SignInPlayerRequest = 'Player: Request to sign in a player',
     SignInPlayerComplete = 'Player: Successfully signed in player',
     SignInPlayerError = 'Player: Error reported from signing in player',
-    SetPlayerData = 'Player: Set player data on state',
+    SetPlayerDataRequest = 'Player: Request to save player data',
+    SetPlayerDataComplete = 'Player: Successfully saved player data',
+    SetPlayerDataError = 'Player: Error reported from saving player data',
   }
 
   export interface SignInPlayerRequest extends Action {
@@ -36,14 +38,26 @@ export namespace Player {
     player: Entity;
   }
 
-  export interface SetPlayerData extends Action {
-    type: ActionTypes.SetPlayerData;
+  export interface SetPlayerDataRequest extends Action {
+    type: ActionTypes.SetPlayerDataRequest;
     player: Entity;
+  }
+
+  export interface SetPlayerDataComplete extends Action {
+    type: ActionTypes.SetPlayerDataComplete;
+    player: Entity;
+  }
+
+  export interface SetPlayerDataError extends Action {
+    type: ActionTypes.SetPlayerDataError;
+    error: Error;
   }
 
   export type Actions =
     | SignInPlayerRequest
     | SignInPlayerError
     | SignInPlayerComplete
-    | SetPlayerData;
+    | SetPlayerDataRequest
+    | SetPlayerDataComplete
+    | SetPlayerDataError;
 }

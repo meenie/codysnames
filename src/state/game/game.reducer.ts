@@ -26,6 +26,10 @@ const reducer = (state = gameInitialState, action: Game.Actions) => {
   switch (action.type) {
     case Game.ActionTypes.SetGameData:
       return produce(state, (draft) => {
+        draft.loaded = true;
+        draft.loading = false;
+        draft.error = false;
+        draft.errors = [];
         draft.data = action.game;
       });
     case Game.ActionTypes.CreateGameRequest:

@@ -16,10 +16,7 @@ export const playerInitialState: Player.State = {
 
 const reducer = (state = playerInitialState, action: Player.Actions) => {
   switch (action.type) {
-    case Player.ActionTypes.SetPlayerData:
-      return produce(state, (draft) => {
-        draft.data = action.player;
-      });
+    case Player.ActionTypes.SetPlayerDataRequest:
     case Player.ActionTypes.SignInPlayerRequest:
       return produce(state, (draft) => {
         draft.loaded = false;
@@ -27,6 +24,7 @@ const reducer = (state = playerInitialState, action: Player.Actions) => {
         draft.error = false;
         draft.errors = [];
       });
+    case Player.ActionTypes.SetPlayerDataComplete:
     case Player.ActionTypes.SignInPlayerComplete:
       return produce(state, (draft) => {
         draft.loaded = true;
@@ -35,6 +33,7 @@ const reducer = (state = playerInitialState, action: Player.Actions) => {
         draft.errors = [];
         draft.data = action.player;
       });
+    case Player.ActionTypes.SetPlayerDataError:
     case Player.ActionTypes.SignInPlayerError:
       return produce(state, (draft) => {
         draft.loaded = false;
