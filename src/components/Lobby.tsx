@@ -47,7 +47,7 @@ const Lobby: React.FC = () => {
     !!blueSpymaster &&
     !!redSpymaster &&
     blueAgents.length > 0 &&
-    redAgents.length > 0 || true
+    redAgents.length > 0
 
   return (
     <Box className={classes.root}>

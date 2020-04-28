@@ -18,6 +18,7 @@ const reducer = (state = playerInitialState, action: Player.Actions) => {
   switch (action.type) {
     case Player.ActionTypes.SetPlayerDataRequest:
     case Player.ActionTypes.SignInPlayerRequest:
+    case Player.ActionTypes.JoinGameRequest:
       return produce(state, (draft) => {
         draft.loaded = false;
         draft.loading = true;
@@ -26,6 +27,7 @@ const reducer = (state = playerInitialState, action: Player.Actions) => {
       });
     case Player.ActionTypes.SetPlayerDataComplete:
     case Player.ActionTypes.SignInPlayerComplete:
+    case Player.ActionTypes.JoinGameComplete:
       return produce(state, (draft) => {
         draft.loaded = true;
         draft.loading = false;
@@ -35,6 +37,7 @@ const reducer = (state = playerInitialState, action: Player.Actions) => {
       });
     case Player.ActionTypes.SetPlayerDataError:
     case Player.ActionTypes.SignInPlayerError:
+    case Player.ActionTypes.JoinGameError:
       return produce(state, (draft) => {
         draft.loaded = false;
         draft.loading = false;

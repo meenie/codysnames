@@ -8,6 +8,8 @@ import {
   signInPlayerError,
   setPlayerDataError,
   setPlayerDataComplete,
+  joinGameComplete,
+  joinGameError,
 } from './player.actions';
 import { Game } from '../game/game.types';
 import produce from 'immer';
@@ -66,7 +68,20 @@ function* signInPlayer() {
   }
 }
 
-function* persistCurrentGameId(action: Game.JoinGameComplete | Game.CreateGameComplete) {
+function* joinGame(action: Player.JoinGameRequest) {
+  try {
+    const player: Player.Entity = yield select((state: Root.State) => state.player.data);
+    const newPlayerData = produce(player, (draft) => {
+      draft.currentGameId = action.gameId;
+    });
+    yield call(savePlayerData, newPlayerData);
+    yield put(joinGameComplete(newPlayerData));
+  } catch (e) {
+    yield put(joinGameError(e));
+  }
+}
+
+function* gameCreated(action: Game.CreateGameComplete) {
   const player: Player.Entity = yield select((state: Root.State) => state.player.data);
   const newPlayerData = produce(player, (draft) => {
     draft.currentGameId = action.game.id;
@@ -88,11 +103,12 @@ function* setPlayerDataListener() {
   yield takeEvery(Player.ActionTypes.SetPlayerDataRequest, setPlayerData);
 }
 
-function* persistCurrentGameIdListener() {
-  yield takeEvery(
-    [ Game.ActionTypes.JoinGameComplete, Game.ActionTypes.CreateGameComplete ],
-    persistCurrentGameId
-  );
+function* joinGameListener() {
+  yield takeEvery([ Player.ActionTypes.JoinGameRequest ], joinGame);
+}
+
+function* gameCreatedListener() {
+  yield takeEvery([ Game.ActionTypes.CreateGameComplete ], gameCreated);
 }
 
 function* unsetCurrentGameIdListener() {
@@ -107,7 +123,8 @@ export function* playerSaga() {
   yield all([
     fork(setPlayerDataListener),
     fork(signInPlayerListener),
-    fork(persistCurrentGameIdListener),
+    fork(joinGameListener),
+    fork(gameCreatedListener),
     fork(unsetCurrentGameIdListener),
   ]);
 }

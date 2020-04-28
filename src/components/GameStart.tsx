@@ -3,7 +3,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { TextField, Button, Grid, Typography } from '@material-ui/core';
 import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
 
-import { createGameRequest, joinGameRequest } from '../state/game/game.actions';
+import { createGameRequest } from '../state/game/game.actions';
+import { joinGameRequest } from '../state/player/player.actions';
 import { Root } from "../state/root.types";
 
 
@@ -58,7 +59,7 @@ const GameStart: React.FC = () => {
             onChange={(ev) => setGameId(ev.target.value)}
             onKeyPress={(ev) => {
               if (ev.key === 'Enter' && gameId && gameId.length === 4) {
-                dispatch(joinGameRequest(gameId))
+                dispatch(joinGameRequest(gameId.toLowerCase()))
                 ev.preventDefault();
               }
             }} />

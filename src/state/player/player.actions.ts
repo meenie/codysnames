@@ -34,3 +34,18 @@ export const signInPlayerError = (error: Error): Player.SignInPlayerError => ({
   type: Player.ActionTypes.SignInPlayerError,
   error,
 });
+
+export const joinGameRequest = (gameId: string): Player.JoinGameRequest => ({
+  type: Player.ActionTypes.JoinGameRequest,
+  gameId,
+});
+
+export const joinGameComplete = (player: Player.Entity): Player.JoinGameComplete => ({
+  type: Player.ActionTypes.JoinGameComplete,
+  player,
+});
+
+export const joinGameError = (error: Error): Player.JoinGameError => ({
+  type: Player.ActionTypes.JoinGameError,
+  error,
+});

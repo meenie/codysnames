@@ -95,23 +95,29 @@ export const getGameData = async (gameId: string) => {
 
 const setGameData = async (game: Game.Entity) => {
   const gameRef = db.collection('games').doc(game.id);
-  return gameRef.set(game);
+  return await gameRef.set(game);
 };
+
+function* loadGameCards(game: Game.Entity, player: Player.Entity) {
+  const { type } = getTeamForPlayer(game, player);
+  const [ gameCardsData, gameCardStatesData ]: [
+    GameCard.GameCardEntity[],
+    GameCard.GameCardStateEntity[]
+  ] = yield all([
+    call(getGameCards, game.id),
+    call(getGameCardStates, game.id, type === Game.PlayerType.Spymaster),
+  ]);
+  yield all([
+    put(databasePushGameCardUpdate(gameCardsData)),
+    put(databasePushGameCardStateUpdate(gameCardStatesData)),
+  ]);
+}
 
 function* switchTeams() {
   try {
-    const player = yield select((state: Root.State) => state.player.data);
-
-    if (!player.currentGameId) {
-      return;
-    }
-
-    const gameData: Game.Entity = yield call(getGameData, player.currentGameId);
-
-    if (!gameData) {
-      return;
-    }
-
+    const player: Player.Entity = yield select((state: Root.State) => state.player.data);
+    const gameId = yield select((state: Root.State) => state.game.data.id);
+    const gameData: Game.Entity = yield call(getGameData, gameId);
     const team = getTeamForPlayer(gameData, player);
 
     if (team.type === Game.PlayerType.Spymaster) {
@@ -138,17 +144,8 @@ function* switchTeams() {
 function* promotePlayerToSpymaster(action: Game.PromoteToSpymasterRequest) {
   try {
     const player = action.player;
-
-    if (!player.currentGameId) {
-      return; // Player not in a game
-    }
-
-    const gameData: Game.Entity = yield call(getGameData, player.currentGameId);
-
-    if (!gameData) {
-      return; // Game doesn't exist, O.o?
-    }
-
+    const gameId = yield select((state: Root.State) => state.game.data.id);
+    const gameData: Game.Entity = yield call(getGameData, gameId);
     const team = getTeamForPlayer(gameData, player);
 
     if (team.type === Game.PlayerType.Spymaster) {
@@ -196,10 +193,14 @@ function* endTurn() {
   }
 }
 
-function* joinGame(action: Game.JoinGameRequest) {
+function* joinGame(action: Player.JoinGameComplete) {
   try {
-    const player: Player.Entity = yield select((state: Root.State) => state.player.data);
-    const gameData: Game.Entity = yield call(getGameData, action.gameId);
+    const player = action.player;
+    if (!player.currentGameId) {
+      return;
+    }
+
+    const gameData: Game.Entity = yield call(getGameData, player.currentGameId);
 
     if (!gameData) {
       return yield put(joinGameError(new Error('The game does not exist!')));
@@ -220,6 +221,11 @@ function* joinGame(action: Game.JoinGameRequest) {
     });
 
     yield call(setGameData, newGameData);
+
+    if (newGameData.status === Game.Status.InSession) {
+      yield call(loadGameCards, newGameData, player);
+    }
+
     yield put(joinGameComplete(newGameData));
   } catch (e) {
     yield put(joinGameError(e));
@@ -236,22 +242,7 @@ function* seedExistingGame(action: Player.SignInPlayerComplete) {
 
     const gameData: Game.Entity = yield call(getGameData, action.player.currentGameId);
     if (gameData.status === Game.Status.InSession) {
-      const { type } = getTeamForPlayer(gameData, action.player);
-      const [ gameCardsData, gameCardStatesData ]: [
-        GameCard.GameCardEntity[],
-        GameCard.GameCardStateEntity[]
-      ] = yield all([
-        call(getGameCards, action.player.currentGameId),
-        call(
-          getGameCardStates,
-          action.player.currentGameId,
-          type === Game.PlayerType.Spymaster
-        ),
-      ]);
-      yield all([
-        put(databasePushGameCardUpdate(gameCardsData)),
-        put(databasePushGameCardStateUpdate(gameCardStatesData)),
-      ]);
+      yield call(loadGameCards, gameData, action.player);
     }
 
     yield put(loadGameComplete(gameData));
@@ -437,7 +428,7 @@ function* endTurnListener() {
 }
 
 function* joinGameListener() {
-  yield takeEvery(Game.ActionTypes.JoinGameRequest, joinGame);
+  yield takeEvery(Player.ActionTypes.JoinGameComplete, joinGame);
 }
 
 function* leaveGameListener() {

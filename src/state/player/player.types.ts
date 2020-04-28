@@ -19,6 +19,9 @@ export namespace Player {
     SignInPlayerRequest = 'Player: Request to sign in a player',
     SignInPlayerComplete = 'Player: Successfully signed in player',
     SignInPlayerError = 'Player: Error reported from signing in player',
+    JoinGameRequest = 'Player: Request to join game',
+    JoinGameComplete = 'Player: Successfully joined game',
+    JoinGameError = 'Player: Error reported from joining game',
     SetPlayerDataRequest = 'Player: Request to save player data',
     SetPlayerDataComplete = 'Player: Successfully saved player data',
     SetPlayerDataError = 'Player: Error reported from saving player data',
@@ -28,14 +31,29 @@ export namespace Player {
     type: ActionTypes.SignInPlayerRequest;
   }
 
+  export interface SignInPlayerComplete extends Action {
+    type: ActionTypes.SignInPlayerComplete;
+    player: Entity;
+  }
+
   export interface SignInPlayerError extends Action {
     type: ActionTypes.SignInPlayerError;
     error: Error;
   }
 
-  export interface SignInPlayerComplete extends Action {
-    type: ActionTypes.SignInPlayerComplete;
+  export interface JoinGameRequest extends Action {
+    type: ActionTypes.JoinGameRequest;
+    gameId: string;
+  }
+
+  export interface JoinGameComplete extends Action {
+    type: ActionTypes.JoinGameComplete;
     player: Entity;
+  }
+
+  export interface JoinGameError extends Action {
+    type: ActionTypes.JoinGameError;
+    error: Error;
   }
 
   export interface SetPlayerDataRequest extends Action {
@@ -55,8 +73,11 @@ export namespace Player {
 
   export type Actions =
     | SignInPlayerRequest
-    | SignInPlayerError
     | SignInPlayerComplete
+    | SignInPlayerError
+    | JoinGameRequest
+    | JoinGameComplete
+    | JoinGameError
     | SetPlayerDataRequest
     | SetPlayerDataComplete
     | SetPlayerDataError;
