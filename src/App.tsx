@@ -30,7 +30,9 @@ const App: React.FC = () => {
   const classes = useStyles();
   const dispatch = useDispatch();
   const isLoggedIn = useSelector((state: Root.State) => !!state.player.data.id);
-  const currentGameId = useSelector((state: Root.State) => state.player.data.currentGameId);
+  const gameLoaded = useSelector((state: Root.State) => state.game.loaded);
+  const gameLoading = useSelector((state: Root.State) => state.game.loading);
+  const gameId = useSelector((state: Root.State) => state.game.data.id);
 
   useEffect(() => {
     dispatch(signInPlayerRequest());
@@ -38,11 +40,11 @@ const App: React.FC = () => {
 
   return (
     <Box className={classes.root}>
-      <Fade in={!isLoggedIn}><CircularProgress className={classes.loading} /></Fade>
-      {isLoggedIn && <Container className={classes.root} maxWidth="md">
+      <Fade in={!isLoggedIn || gameLoading}><CircularProgress className={classes.loading} /></Fade>
+      {isLoggedIn && !gameLoading && <Container className={classes.root} maxWidth="md">
         <Typography variant="h1" className={classes.title}>CODYSNAMES</Typography>
-        {currentGameId && <Game gameId={currentGameId} />}
-        {!currentGameId && <Home />}
+        {gameLoaded && <Game gameId={gameId} />}
+        {!gameLoaded && <Home />}
       </Container>}
     </Box>
   );

@@ -1,8 +1,8 @@
 import { Game } from './game.types';
 import { Player } from '../player/player.types';
 
-export const setGameData = (game: Game.Entity): Game.SetGameData => ({
-  type: Game.ActionTypes.SetGameData,
+export const databasePushUpdate = (game: Game.Entity): Game.DatabasePushUpdate => ({
+  type: Game.ActionTypes.DatabasePushUpdate,
   game,
 });
 
@@ -10,12 +10,27 @@ export const createGameRequest = (): Game.CreateGameRequest => ({
   type: Game.ActionTypes.CreateGameRequest,
 });
 
-export const createGameComplete = (gameId: string): Game.CreateGameComplete => ({
+export const createGameComplete = (game: Game.Entity): Game.CreateGameComplete => ({
   type: Game.ActionTypes.CreateGameComplete,
-  gameId,
+  game,
 });
 
 export const createGameError = (error: Error): Game.CreateGameError => ({
+  type: Game.ActionTypes.CreateGameError,
+  error,
+});
+
+export const loadGameRequest = (gameId: string): Game.LoadGameRequest => ({
+  type: Game.ActionTypes.LoadGameRequest,
+  gameId,
+});
+
+export const loadGameComplete = (game: Game.Entity): Game.LoadGameComplete => ({
+  type: Game.ActionTypes.LoadGameComplete,
+  game,
+});
+
+export const loadGameError = (error: Error): Game.CreateGameError => ({
   type: Game.ActionTypes.CreateGameError,
   error,
 });
@@ -25,9 +40,9 @@ export const joinGameRequest = (gameId: string): Game.JoinGameRequest => ({
   gameId,
 });
 
-export const joinGameComplete = (gameId: string): Game.JoinGameComplete => ({
+export const joinGameComplete = (game: Game.Entity): Game.JoinGameComplete => ({
   type: Game.ActionTypes.JoinGameComplete,
-  gameId,
+  game,
 });
 
 export const joinGameError = (error: Error): Game.JoinGameError => ({
@@ -41,11 +56,11 @@ export const startGameRequest = (gameId: string): Game.StartGameRequest => ({
 });
 
 export const startGameComplete = (
-  gameId: string,
+  game: Game.Entity,
   whoIsFirst: Game.TeamColor
 ): Game.StartGameComplete => ({
   type: Game.ActionTypes.StartGameComplete,
-  gameId,
+  game,
   whoIsFirst,
 });
 
@@ -59,9 +74,9 @@ export const leaveGameRequest = (gameId: string): Game.LeaveGameRequest => ({
   gameId,
 });
 
-export const leaveGameComplete = (gameId: string): Game.LeaveGameComplete => ({
+export const leaveGameComplete = (game: Game.Entity): Game.LeaveGameComplete => ({
   type: Game.ActionTypes.LeaveGameComplete,
-  gameId,
+  game,
 });
 
 export const leaveGameError = (error: Error): Game.LeaveGameError => ({

@@ -27,7 +27,11 @@ export const useCollection = <T extends Entity>(
   useEffect(() => {
     handlers.subscribe && handlers.subscribe();
     const unsubscribeFromQuery = query().onSnapshot(
+      { includeMetadataChanges: true },
       (snapshot) => {
+        if (snapshot.metadata.hasPendingWrites) {
+          return;
+        }
         const docs = flow(
           () => snapshot.docs,
           map(dataFromSnapshot),

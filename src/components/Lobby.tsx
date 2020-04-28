@@ -23,7 +23,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 const Lobby: React.FC = () => {
   const classes = useStyles();
   const dispatch = useDispatch();
-  const [gameStarting, setGameStarting] = useState(false);
+  const gameStarting = useSelector((state: Root.State) => state.game.starting);
   const {
     redSpymaster,
     blueSpymaster,
@@ -47,7 +47,7 @@ const Lobby: React.FC = () => {
     !!blueSpymaster &&
     !!redSpymaster &&
     blueAgents.length > 0 &&
-    redAgents.length > 0
+    redAgents.length > 0 || true
 
   return (
     <Box className={classes.root}>
@@ -57,7 +57,6 @@ const Lobby: React.FC = () => {
           color="primary"
           disabled={gameStarting}
           onClick={() => {
-            setGameStarting(true)
             dispatch(startGameRequest(id))
           }}>
           {gameStarting ? 'Game Starting...' : 'Start Game'}

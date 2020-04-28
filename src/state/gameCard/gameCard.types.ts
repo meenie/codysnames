@@ -43,8 +43,9 @@ export namespace GameCard {
   }
 
   export enum ActionTypes {
-    SetGameCardsData = 'GameCard: Set game cards data on state',
-    SetGameCardStatesData = 'GameCard: Set game card states data on state',
+    DatabasePushGameCardUpdate = 'GameCard: Update game card data from real-time database push',
+    DatabasePushGameCardStateUpdate = 'GameCard: Update game card state data from real-time database push',
+    UnloadGameCards = 'GameCard: Remove the current game cards from the store',
     CreateGameCardsRequest = 'GameCard: Request to create game cards',
     CreateGameCardsComplete = 'GameCard: Successfully created game cards',
     CreateGameCardsError = 'GameCard: Error reported from creating game cards',
@@ -53,14 +54,18 @@ export namespace GameCard {
     FlipGameCardError = 'GameCard: Error rported from flipping game card',
   }
 
-  export interface SetGameCardsData extends Action {
-    type: ActionTypes.SetGameCardsData;
+  export interface DatabasePushGameCardUpdate extends Action {
+    type: ActionTypes.DatabasePushGameCardUpdate;
     gameCards: GameCardEntity[];
   }
 
-  export interface SetGameCardStatesData extends Action {
-    type: ActionTypes.SetGameCardStatesData;
+  export interface DatabasePushGameCardStateUpdate extends Action {
+    type: ActionTypes.DatabasePushGameCardStateUpdate;
     gameCardStates: GameCardStateEntity[];
+  }
+
+  export interface UnloadGameCards extends Action {
+    type: ActionTypes.UnloadGameCards;
   }
 
   export interface CreateGameCardsRequest extends Action {
@@ -92,8 +97,9 @@ export namespace GameCard {
   }
 
   export type Actions =
-    | SetGameCardsData
-    | SetGameCardStatesData
+    | DatabasePushGameCardUpdate
+    | DatabasePushGameCardStateUpdate
+    | UnloadGameCards
     | CreateGameCardsRequest
     | CreateGameCardsComplete
     | CreateGameCardsError

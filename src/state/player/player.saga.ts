@@ -69,7 +69,7 @@ function* signInPlayer() {
 function* persistCurrentGameId(action: Game.JoinGameComplete | Game.CreateGameComplete) {
   const player: Player.Entity = yield select((state: Root.State) => state.player.data);
   const newPlayerData = produce(player, (draft) => {
-    draft.currentGameId = action.gameId;
+    draft.currentGameId = action.game.id;
   });
   yield call(savePlayerData, newPlayerData);
   yield put(setPlayerDataComplete(newPlayerData));

@@ -31,7 +31,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 const GameStart: React.FC = () => {
   const classes = useStyles();
   const [gameId, setGameId] = useState<string | undefined>();
-  const creatingGame = useSelector((state: Root.State) => state.game.loading);
+  const creatingGame = useSelector((state: Root.State) => state.game.creating);
   const dispatch = useDispatch();
 
   return (

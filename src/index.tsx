@@ -14,7 +14,7 @@ import * as serviceWorker from "./serviceWorker";
 import rootSaga from "./state/root.saga";
 
 const sagaMiddleware = createSagaMiddleware();
-const composeEnhancers = composeWithDevTools({});
+const composeEnhancers = composeWithDevTools({ trace: true, traceLimit: 25, shouldHotReload: false });
 const store = createStore(
   reducer,
   initialState,

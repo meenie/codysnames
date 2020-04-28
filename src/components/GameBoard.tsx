@@ -10,7 +10,7 @@ import { Root } from "../state/root.types";
 import { Game } from "../state/game/game.types";
 import { GameCard as IGameCard } from "../state/gameCard/gameCard.types";
 import { endTurnRequest } from "../state/game/game.actions";
-import { setGameCardsData, setGameCardStatesData } from "../state/gameCard/gameCard.actions";
+import { databasePushGameCardUpdate, databasePushGameCardStateUpdate } from "../state/gameCard/gameCard.actions";
 import { getCurrentPlayerType, getCurrentPlayerColor } from "../state/player/player.selectors";
 import { getGameCardsWithState } from "../state/gameCard/gameCard.selectors";
 import { useCollection } from "../hooks/useCollection";
@@ -77,6 +77,7 @@ const GameBoard: React.FC = () => {
   const game = useSelector((state: Root.State) => state.game.data, isEqual);
   const currentPlayerType = useSelector(getCurrentPlayerType);
   const currentPlayerColor = useSelector(getCurrentPlayerColor);
+  const leavingGame = useSelector((state: Root.State) => state.game.leaving);
 
   const whoWon = game.whoWon;
   const whosTurn = game.turn;
@@ -95,7 +96,7 @@ const GameBoard: React.FC = () => {
       .where('gameId', '==', game.id)
       .orderBy('order', 'asc'),
     {
-      data: gameCards => dispatch(setGameCardsData(gameCards)),
+      data: gameCards => !leavingGame && dispatch(databasePushGameCardUpdate(gameCards)),
     }, [game.id]
   )
 
@@ -115,7 +116,7 @@ const GameBoard: React.FC = () => {
       return query;
     },
     {
-      data: gameCardState => dispatch(setGameCardStatesData(gameCardState)),
+      data: gameCardState => !leavingGame && dispatch(databasePushGameCardStateUpdate(gameCardState)),
     }, [game.id, currentPlayerType, game.status]
   )
 

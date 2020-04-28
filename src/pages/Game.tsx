@@ -6,7 +6,7 @@ import isEqual from 'lodash/isEqual';
 
 import { useDoc } from "../hooks/useDoc";
 import { db } from "../services/firebase";
-import { leaveGameRequest, setGameData } from "../state/game/game.actions";
+import { databasePushUpdate } from "../state/game/game.actions";
 import { Root } from "../state/root.types";
 import { Game as IGame } from "../state/game/game.types";
 import GameBoard from "../components/GameBoard";
@@ -40,22 +40,13 @@ const Game: React.FC<{ gameId: string; }> = ({ gameId }) => {
   const dispatch = useDispatch();
 
   const game = useSelector((state: Root.State) => state.game.data, isEqual);
-  const startingGame = useSelector((state: Root.State) => state.game.loading);
-  const gameLoaded = useSelector((state: Root.State) => state.game.loaded);
 
   useDoc<IGame.Entity>(
     () => db.collection('games').doc(gameId),
     {
-      data: game => game ? dispatch(setGameData(game)) : dispatch(leaveGameRequest(gameId)),
+      data: game => game && dispatch(databasePushUpdate(game))
     }, [gameId]
   )
-
-  if (
-    !gameLoaded ||
-    startingGame
-  ) {
-    return <p>&nbsp;</p>
-  }
 
   return (
     <Box className={classes.root}>

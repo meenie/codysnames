@@ -9,6 +9,7 @@ import {
   createGameCardsComplete,
   flipGameCardComplete,
   createGameCardsError,
+  unloadGameCards,
 } from './gameCard.actions';
 import { Root } from '../root.types';
 import { getCurrentPlayerColor } from '../player/player.selectors';
@@ -27,14 +28,16 @@ export const getGameCards = async (gameId: string) => {
     .where('gameId', '==', gameId)
     .orderBy('order', 'asc');
   const gameCardsQuerySnapshot = await gameCardsRef.get();
-  return gameCardsQuerySnapshot.docs.map((doc) => doc.data() as GameCard.Entity);
+  return gameCardsQuerySnapshot.docs.map((doc) => doc.data() as GameCard.GameCardEntity);
 };
 
-export const getGameCardStates = async (gameId: string, flipped = true) => {
-  let gameCardStateQuery = db
-    .collection('gameCardState')
-    .where('gameId', '==', gameId)
-    .where('flipped', '==', flipped);
+export const getGameCardStates = async (gameId: string, forSpymaster = false) => {
+  let gameCardStateQuery = db.collection('gameCardState').where('gameId', '==', gameId);
+
+  if (!forSpymaster) {
+    gameCardStateQuery = gameCardStateQuery.where('flipped', '==', true);
+  }
+
   const gameCardStateQuerySnapshot = await gameCardStateQuery.get();
   return gameCardStateQuerySnapshot.docs.map(
     (doc) => doc.data() as GameCard.GameCardStateEntity
@@ -48,7 +51,6 @@ const setGameCardStateData = async (gameCardState: any) => {
 
 const setGameCardsData = async (gameCards: GameCard.Entity) => {
   const batch = db.batch();
-
   gameCards.cards.forEach((card, i) => {
     const gameCardRef = db.collection('gameCards').doc();
     const gameCardStateRef = db.collection('gameCardState').doc(gameCardRef.id);
@@ -64,7 +66,7 @@ const setGameCardsData = async (gameCards: GameCard.Entity) => {
     batch.set(gameCardStateRef, gameCardStateData);
   });
 
-  return await batch.commit();
+  await batch.commit();
 };
 
 const generateCardTypeMap = (whoIsStarting: GameCard.CardType) => {
@@ -92,7 +94,7 @@ function* createGameCards(action: Game.StartGameComplete) {
       (acc, name, i) => {
         acc.cards.push({
           id: '',
-          gameId: action.gameId,
+          gameId: action.game.id,
           name,
           order: i,
         });
@@ -100,7 +102,7 @@ function* createGameCards(action: Game.StartGameComplete) {
         acc.cardStates.push({
           id: '',
           type: cardTypeMap[i],
-          gameId: action.gameId,
+          gameId: action.game.id,
           flipped: false,
         });
 
@@ -114,6 +116,10 @@ function* createGameCards(action: Game.StartGameComplete) {
   } catch (e) {
     yield put(createGameCardsError(e));
   }
+}
+
+function* unloadCards() {
+  yield put(unloadGameCards());
 }
 
 function* flipGameCard(action: GameCard.FlipGameCardRequest) {
@@ -150,6 +156,14 @@ function* flipGameCardListener() {
   yield takeEvery([ GameCard.ActionTypes.FlipGameCardRequest ], flipGameCard);
 }
 
+function* clearCardsListener() {
+  yield takeEvery([ Game.ActionTypes.LeaveGameComplete ], unloadCards);
+}
+
 export function* gameCardSaga() {
-  yield all([ fork(createGameCardsListener), fork(flipGameCardListener) ]);
+  yield all([
+    fork(createGameCardsListener),
+    fork(flipGameCardListener),
+    fork(clearCardsListener),
+  ]);
 }

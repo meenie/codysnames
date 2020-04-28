@@ -3,8 +3,16 @@ import { Player } from '../player/player.types';
 
 export namespace Game {
   export interface State {
-    loaded: boolean;
     loading: boolean;
+    loaded: boolean;
+    creating: boolean;
+    created: boolean;
+    leaving: boolean;
+    left: boolean;
+    starting: boolean;
+    started: boolean;
+    joining: boolean;
+    joined: boolean;
     error: boolean;
     errors: Error[];
     data: Entity;
@@ -39,10 +47,13 @@ export namespace Game {
   }
 
   export enum ActionTypes {
-    SetGameData = 'Game: Set game data on state',
+    DatabasePushUpdate = 'Game: Update game data from real-time database push',
     CreateGameRequest = 'Game: Request to create game',
     CreateGameComplete = 'Game: Successfully created game',
     CreateGameError = 'Game: Error reported from creating game',
+    LoadGameRequest = 'Game: Request to load game',
+    LoadGameComplete = 'Game: Successfully loaded game',
+    LoadGameError = 'Game: Error reported from loading game',
     JoinGameRequest = 'Game: Request to join game',
     JoinGameComplete = 'Game: Successfully joined game',
     JoinGameError = 'Game: Error reported from joining game',
@@ -63,8 +74,8 @@ export namespace Game {
     EndTurnError = 'Game: Error reported from ending turn',
   }
 
-  export interface SetGameData extends Action {
-    type: ActionTypes.SetGameData;
+  export interface DatabasePushUpdate extends Action {
+    type: ActionTypes.DatabasePushUpdate;
     game: Entity;
   }
 
@@ -74,11 +85,26 @@ export namespace Game {
 
   export interface CreateGameComplete extends Action {
     type: ActionTypes.CreateGameComplete;
-    gameId: string;
+    game: Entity;
   }
 
   export interface CreateGameError extends Action {
     type: ActionTypes.CreateGameError;
+    error: Error;
+  }
+
+  export interface LoadGameRequest extends Action {
+    type: ActionTypes.LoadGameRequest;
+    gameId: string;
+  }
+
+  export interface LoadGameComplete extends Action {
+    type: ActionTypes.LoadGameComplete;
+    game: Entity;
+  }
+
+  export interface LoadGameError extends Action {
+    type: ActionTypes.LoadGameError;
     error: Error;
   }
 
@@ -89,7 +115,7 @@ export namespace Game {
 
   export interface JoinGameComplete extends Action {
     type: ActionTypes.JoinGameComplete;
-    gameId: string;
+    game: Entity;
   }
 
   export interface JoinGameError extends Action {
@@ -104,7 +130,7 @@ export namespace Game {
 
   export interface StartGameComplete extends Action {
     type: ActionTypes.StartGameComplete;
-    gameId: string;
+    game: Entity;
     whoIsFirst: TeamColor;
   }
 
@@ -120,7 +146,7 @@ export namespace Game {
 
   export interface LeaveGameComplete extends Action {
     type: ActionTypes.LeaveGameComplete;
-    gameId: string;
+    game: Entity;
   }
 
   export interface LeaveGameError extends Action {
@@ -169,10 +195,13 @@ export namespace Game {
   }
 
   export type Actions =
-    | SetGameData
+    | DatabasePushUpdate
     | CreateGameRequest
     | CreateGameComplete
     | CreateGameError
+    | LoadGameRequest
+    | LoadGameComplete
+    | LoadGameError
     | JoinGameRequest
     | JoinGameComplete
     | JoinGameError

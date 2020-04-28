@@ -1,17 +1,21 @@
 import { GameCard } from './gameCard.types';
 
-export const setGameCardsData = (
+export const databasePushGameCardUpdate = (
   gameCards: GameCard.GameCardEntity[]
-): GameCard.SetGameCardsData => ({
-  type: GameCard.ActionTypes.SetGameCardsData,
+): GameCard.DatabasePushGameCardUpdate => ({
+  type: GameCard.ActionTypes.DatabasePushGameCardUpdate,
   gameCards,
 });
 
-export const setGameCardStatesData = (
+export const databasePushGameCardStateUpdate = (
   gameCardStates: GameCard.GameCardStateEntity[]
-): GameCard.SetGameCardStatesData => ({
-  type: GameCard.ActionTypes.SetGameCardStatesData,
+): GameCard.DatabasePushGameCardStateUpdate => ({
+  type: GameCard.ActionTypes.DatabasePushGameCardStateUpdate,
   gameCardStates,
+});
+
+export const unloadGameCards = () => ({
+  type: GameCard.ActionTypes.UnloadGameCards,
 });
 
 export const createGameCardsRequest = (): GameCard.CreateGameCardsRequest => ({

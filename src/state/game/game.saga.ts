@@ -5,6 +5,7 @@ import { db } from '../../services/firebase';
 import { Game } from './game.types';
 import { Player } from '../player/player.types';
 import { Root } from '../root.types';
+import { GameCard } from '../gameCard/gameCard.types';
 import {
   joinGameError,
   joinGameComplete,
@@ -20,9 +21,16 @@ import {
   endTurnComplete,
   leaveGameError,
   startGameError,
+  loadGameError,
+  loadGameComplete,
+  loadGameRequest,
 } from './game.actions';
+import {
+  databasePushGameCardUpdate,
+  databasePushGameCardStateUpdate,
+} from '../gameCard/gameCard.actions';
 import { blankPlayer } from '../player/player.reducer';
-import { GameCard } from '../gameCard/gameCard.types';
+import { blankGame } from './game.reducer';
 import {
   getGameCardStateData,
   getGameCards,
@@ -193,10 +201,6 @@ function* joinGame(action: Game.JoinGameRequest) {
     const player: Player.Entity = yield select((state: Root.State) => state.player.data);
     const gameData: Game.Entity = yield call(getGameData, action.gameId);
 
-    if (player.currentGameId) {
-      return yield put(joinGameError(new Error('You are already in a game!')));
-    }
-
     if (!gameData) {
       return yield put(joinGameError(new Error('The game does not exist!')));
     }
@@ -216,9 +220,43 @@ function* joinGame(action: Game.JoinGameRequest) {
     });
 
     yield call(setGameData, newGameData);
-    yield put(joinGameComplete(gameData.id));
+    yield put(joinGameComplete(newGameData));
   } catch (e) {
     yield put(joinGameError(e));
+  }
+}
+
+function* seedExistingGame(action: Player.SignInPlayerComplete) {
+  try {
+    if (!action.player.currentGameId) {
+      return;
+    }
+
+    yield put(loadGameRequest(action.player.currentGameId));
+
+    const gameData: Game.Entity = yield call(getGameData, action.player.currentGameId);
+    if (gameData.status === Game.Status.InSession) {
+      const { type } = getTeamForPlayer(gameData, action.player);
+      const [ gameCardsData, gameCardStatesData ]: [
+        GameCard.GameCardEntity[],
+        GameCard.GameCardStateEntity[]
+      ] = yield all([
+        call(getGameCards, action.player.currentGameId),
+        call(
+          getGameCardStates,
+          action.player.currentGameId,
+          type === Game.PlayerType.Spymaster
+        ),
+      ]);
+      yield all([
+        put(databasePushGameCardUpdate(gameCardsData)),
+        put(databasePushGameCardStateUpdate(gameCardStatesData)),
+      ]);
+    }
+
+    yield put(loadGameComplete(gameData));
+  } catch (e) {
+    yield put(loadGameError(e));
   }
 }
 
@@ -234,7 +272,7 @@ function* leaveGame() {
 
     if (!gameData) {
       // Game no longer exists so just say we left it
-      return yield put(leaveGameComplete(player.currentGameId));
+      return yield put(leaveGameComplete(gameData));
     }
 
     const newGameData = produce(gameData, (draft) => {
@@ -257,7 +295,7 @@ function* leaveGame() {
     });
 
     yield call(setGameData, newGameData);
-    yield put(leaveGameComplete(newGameData.id));
+    yield put(leaveGameComplete(blankGame));
   } catch (e) {
     yield put(leaveGameError(e));
   }
@@ -281,7 +319,7 @@ function* startGame(action: Game.StartGameRequest) {
     });
 
     yield call(setGameData, newGameData);
-    yield put(startGameComplete(gameData.id, whoIsFirst));
+    yield put(startGameComplete(newGameData, whoIsFirst));
   } catch (e) {
     yield put(startGameError(e));
   }
@@ -304,9 +342,9 @@ function* createGame() {
     };
 
     yield call(setGameData, gameData);
-    return yield put(createGameComplete(gameData.id));
+    yield put(createGameComplete(gameData));
   } catch (e) {
-    return yield put(createGameError(e));
+    yield put(createGameError(e));
   }
 }
 
@@ -320,8 +358,7 @@ function* updateStateOfGame(action: GameCard.FlipGameCardComplete) {
   const gameCards: GameCard.GameCardEntity[] = yield call(getGameCards, gameId);
   const gameCardStateCollection: GameCard.GameCardStateEntity[] = yield call(
     getGameCardStates,
-    gameId,
-    true
+    gameId
   );
 
   const flippedGameCardStateMap = gameCards.reduce(
@@ -415,6 +452,10 @@ function* createGameListner() {
   yield takeEvery(Game.ActionTypes.CreateGameRequest, createGame);
 }
 
+function* seedExistingGameListener() {
+  yield takeEvery(Player.ActionTypes.SignInPlayerComplete, seedExistingGame);
+}
+
 function* updateStateOfGameListener() {
   yield takeEvery(GameCard.ActionTypes.FlipGameCardComplete, updateStateOfGame);
 }
@@ -428,6 +469,7 @@ export function* gameSaga() {
     fork(leaveGameListener),
     fork(startGameListener),
     fork(createGameListner),
+    fork(seedExistingGameListener),
     fork(updateStateOfGameListener),
   ]);
 }
