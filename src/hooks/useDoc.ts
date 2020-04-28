@@ -1,7 +1,7 @@
-import { useEffect } from "react";
-import firebase from "firebase";
+import { useEffect } from 'react';
+import firebase from 'firebase';
 
-import { dataFromSnapshot } from "../helpers/firebase";
+import { dataFromSnapshot } from '../helpers/firebase';
 
 interface Entity {
   id: string;
@@ -25,7 +25,9 @@ export const useDoc = <T extends Entity>(
   useEffect(() => {
     handlers.subscribe && handlers.subscribe();
     const unsubscribeFromDoc = getDocReference().onSnapshot(
-      (snapshot) => handlers.data(dataFromSnapshot(snapshot)),
+      { includeMetadataChanges: true },
+      (snapshot) =>
+        !snapshot.metadata.hasPendingWrites && handlers.data(dataFromSnapshot(snapshot)),
       (error) => handlers.error && handlers.error(error)
     );
     return () => {

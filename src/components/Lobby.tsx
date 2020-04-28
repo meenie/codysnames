@@ -3,10 +3,12 @@ import { useSelector, useDispatch } from "react-redux";
 import { Grid, Box, Button, Typography, Paper } from '@material-ui/core';
 import { makeStyles, Theme, createStyles } from "@material-ui/core/styles";
 
-import { Store } from "../store/types";
 import PlayerList from "./PlayerList";
-import { promotePlayerToSpymaster, switchTeams, startGame } from "../store/effects";
-import { getCurrentPlayerType, getCurrentPlayerColor } from "../store/selectors";
+import { promoteToSpymasterRequest, switchTeamsRequest, startGameRequest } from "../state/game/game.actions";
+import { getCurrentPlayerType, getCurrentPlayerColor } from "../state/player/player.selectors";
+import { Root } from "../state/root.types";
+import { Game } from "../state/game/game.types";
+import { Player } from "../state/player/player.types";
 
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
@@ -21,24 +23,24 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 const Lobby: React.FC = () => {
   const classes = useStyles();
   const dispatch = useDispatch();
-  const [gameStarting, setGameStarting] = useState(false);
+  const gameStarting = useSelector((state: Root.State) => state.game.starting);
   const {
     redSpymaster,
     blueSpymaster,
     redAgents,
     blueAgents,
     id
-  } = useSelector((state: Store.ApplicationState) => state.game);
+  } = useSelector((state: Root.State) => state.game.data);
   const playerType = useSelector(getCurrentPlayerType);
   const playerColor = useSelector(getCurrentPlayerColor);
-  const isBlueSpymaster = playerType === Store.PlayerType.Spymaster && playerColor === Store.TeamColor.Blue;
+  const isBlueSpymaster = playerType === Game.PlayerType.Spymaster && playerColor === Game.TeamColor.Blue;
 
-  const promoteToSpymasterHandler = (player: Store.Player) => {
-    dispatch(promotePlayerToSpymaster(player))
+  const promoteToSpymasterHandler = (player: Player.Entity) => {
+    dispatch(promoteToSpymasterRequest(player))
   }
 
   const switchTeamsHandler = () => {
-    dispatch(switchTeams())
+    dispatch(switchTeamsRequest())
   }
 
   const canStartGame =
@@ -55,8 +57,7 @@ const Lobby: React.FC = () => {
           color="primary"
           disabled={gameStarting}
           onClick={() => {
-            setGameStarting(true)
-            dispatch(startGame(id))
+            dispatch(startGameRequest(id))
           }}>
           {gameStarting ? 'Game Starting...' : 'Start Game'}
         </Button>}
@@ -70,8 +71,8 @@ const Lobby: React.FC = () => {
               agents={blueAgents}
               spymaster={blueSpymaster}
               teamName="Blue Team"
-              showJoinTeamButton={playerType === Store.PlayerType.Agent && playerColor !== Store.TeamColor.Blue}
-              showPromoteButton={playerType === Store.PlayerType.Spymaster && playerColor === Store.TeamColor.Blue}
+              showJoinTeamButton={playerType === Game.PlayerType.Agent && playerColor !== Game.TeamColor.Blue}
+              showPromoteButton={playerType === Game.PlayerType.Spymaster && playerColor === Game.TeamColor.Blue}
               promoteToSpymaster={promoteToSpymasterHandler}
               switchTeams={switchTeamsHandler} />
           </Paper>
@@ -83,8 +84,8 @@ const Lobby: React.FC = () => {
               agents={redAgents}
               spymaster={redSpymaster}
               teamName="Red Team"
-              showJoinTeamButton={playerType === Store.PlayerType.Agent && playerColor !== Store.TeamColor.Red}
-              showPromoteButton={playerType === Store.PlayerType.Spymaster && playerColor === Store.TeamColor.Red}
+              showJoinTeamButton={playerType === Game.PlayerType.Agent && playerColor !== Game.TeamColor.Red}
+              showPromoteButton={playerType === Game.PlayerType.Spymaster && playerColor === Game.TeamColor.Red}
               promoteToSpymaster={promoteToSpymasterHandler}
               switchTeams={switchTeamsHandler} />
           </Paper>

@@ -4,12 +4,12 @@ import { Box } from "@material-ui/core";
 import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
 import isEqual from 'lodash/isEqual';
 
-import { Store } from "../store/types";
 import { useDoc } from "../hooks/useDoc";
 import { db } from "../services/firebase";
-import { setGameData } from "../store/actions";
+import { databasePushUpdate } from "../state/game/game.actions";
+import { Root } from "../state/root.types";
+import { Game as IGame } from "../state/game/game.types";
 import GameBoard from "../components/GameBoard";
-import { leaveGame } from "../store/effects";
 import Lobby from "../components/Lobby";
 import GameInfo from "../components/GameInfo";
 
@@ -39,32 +39,20 @@ const Game: React.FC<{ gameId: string; }> = ({ gameId }) => {
   const classes = useStyles();
   const dispatch = useDispatch();
 
-  const game = useSelector((state: Store.ApplicationState) => state.game, isEqual);
-  const leavingGame = useSelector((state: Store.ApplicationState) => state.loading.leavingGame);
-  const startingGame = useSelector((state: Store.ApplicationState) => state.loading.startingGame);
+  const game = useSelector((state: Root.State) => state.game.data, isEqual);
 
-  useDoc<Store.Game>(
+  useDoc<IGame.Entity>(
     () => db.collection('games').doc(gameId),
     {
-      data: game => game ? dispatch(setGameData(game)) : dispatch(leaveGame()),
+      data: game => game && dispatch(databasePushUpdate(game))
     }, [gameId]
   )
-
-  const gameLoaded = !!game.id;
-
-  if (
-    !gameLoaded ||
-    leavingGame ||
-    startingGame
-  ) {
-    return <p>&nbsp;</p>
-  }
 
   return (
     <Box className={classes.root}>
       <GameInfo />
-      {game.status === Store.Status.Open && <Lobby />}
-      {(game.status === Store.Status.InSession || game.status === Store.Status.Over) && <GameBoard />}
+      {game.status === IGame.Status.Open && <Lobby />}
+      {(game.status === IGame.Status.InSession || game.status === IGame.Status.Over) && <GameBoard />}
     </Box>
   );
 }

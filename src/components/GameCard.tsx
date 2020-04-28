@@ -5,8 +5,10 @@ import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
 import { useSelector, useDispatch } from "react-redux";
 import classnames from 'classnames';
 
-import { Store } from "../store/types";
-import { flipCard } from "../store/effects";
+import { flipGameCardRequest } from '../state/gameCard/gameCard.actions';
+import { Root } from "../state/root.types";
+import { GameCard as IGameCard } from "../state/gameCard/gameCard.types";
+import { Game } from "../state/game/game.types";
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
   root: {
@@ -55,32 +57,32 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
   }
 }))
 
-const GameCard: React.FC<{ card: Store.GameCardWithState }> = ({ card }) => {
-  const currentPlayerType = useSelector((state: Store.ApplicationState) => {
-    const userId = state.player.id;
-    if (state.game.blueSpymaster.id === userId || state.game.redSpymaster.id === userId) {
-      return Store.PlayerType.Spymaster;
+const GameCard: React.FC<{ card: IGameCard.GameCardEntityWithStateEntity }> = ({ card }) => {
+  const currentPlayerType = useSelector((state: Root.State) => {
+    const userId = state.player.data.id;
+    if (state.game.data.blueSpymaster.id === userId || state.game.data.redSpymaster.id === userId) {
+      return Game.PlayerType.Spymaster;
     }
 
-    return Store.PlayerType.Agent;
+    return Game.PlayerType.Agent;
   });
-  const isSpymaster = currentPlayerType === Store.PlayerType.Spymaster;
-  const gameOver = useSelector((state: Store.ApplicationState) => state.game?.status === Store.Status.Over);
+  const isSpymaster = currentPlayerType === Game.PlayerType.Spymaster;
+  const gameOver = useSelector((state: Root.State) => state.game.data.status === Game.Status.Over);
   const dispatch = useDispatch();
 
   const classes = useStyles();
   const paperClasses = classnames(classes.root, {
-    [classes.red]: (card.state.flipped || isSpymaster || gameOver) && card.state.type === Store.CardType.RedTeam,
-    [classes.blue]: (card.state.flipped || isSpymaster || gameOver) && card.state.type === Store.CardType.BlueTeam,
-    [classes.bystander]: (card.state.flipped || isSpymaster || gameOver) && card.state.type === Store.CardType.Bystander,
-    [classes.assassin]: (card.state.flipped || isSpymaster || gameOver) && card.state.type === Store.CardType.Assassin,
+    [classes.red]: (card.state.flipped || isSpymaster || gameOver) && card.state.type === IGameCard.CardType.RedTeam,
+    [classes.blue]: (card.state.flipped || isSpymaster || gameOver) && card.state.type === IGameCard.CardType.BlueTeam,
+    [classes.bystander]: (card.state.flipped || isSpymaster || gameOver) && card.state.type === IGameCard.CardType.Bystander,
+    [classes.assassin]: (card.state.flipped || isSpymaster || gameOver) && card.state.type === IGameCard.CardType.Assassin,
     [classes.flipped]: card.state.flipped,
     [classes.fontSize30]: card.name.length >= 10,
     [classes.fontSize35]: card.name.length >= 8 && card.name.length < 10,
     [classes.fontSize45]: card.name.length < 8,
   })
   return (
-    <Paper className={paperClasses} onClick={() => dispatch(flipCard(card))}>
+    <Paper className={paperClasses} onClick={() => dispatch(flipGameCardRequest(card.state))}>
       {(!card.state.flipped || gameOver) && card.name}
     </Paper>
   );

@@ -3,10 +3,11 @@ import classnames from 'classnames';
 import { Box, Typography, Button } from "@material-ui/core";
 import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
 
-import { Store } from "../store/types";
 import { useDispatch, useSelector } from "react-redux";
-import { leaveGame } from "../store/effects";
-import { getCurrentPlayerColor } from "../store/selectors";
+import { leaveGameRequest } from "../state/game/game.actions";
+import { getCurrentPlayerColor } from "../state/player/player.selectors";
+import { Root } from "../state/root.types";
+import { Game } from "../state/game/game.types";
 
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
@@ -42,13 +43,13 @@ const GameInfo: React.FC = () => {
   const classes = useStyles();
   const dispatch = useDispatch();
 
-  const playerName = useSelector((state: Store.ApplicationState) => state.player.name);
-  const gameId = useSelector((state: Store.ApplicationState) => state.game.id);
+  const playerName = useSelector((state: Root.State) => state.player.data.name);
+  const gameId = useSelector((state: Root.State) => state.game.data.id);
   const currentPlayerColor = useSelector(getCurrentPlayerColor);
 
   const colorTag = classnames({
-    [classes.redColor]: currentPlayerColor === Store.TeamColor.Red,
-    [classes.blueColor]: currentPlayerColor === Store.TeamColor.Blue
+    [classes.redColor]: currentPlayerColor === Game.TeamColor.Red,
+    [classes.blueColor]: currentPlayerColor === Game.TeamColor.Blue
   })
 
   return (
@@ -61,7 +62,7 @@ const GameInfo: React.FC = () => {
       <Button
         size="small"
         variant="outlined"
-        onClick={() => dispatch(leaveGame())}>
+        onClick={() => dispatch(leaveGameRequest(gameId))}>
         Leave Game
       </Button>
     </Box>

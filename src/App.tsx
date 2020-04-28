@@ -3,10 +3,10 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Box, Typography, CircularProgress, Container, Fade } from '@material-ui/core';
 import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
 
-import { Store } from './store/types';
-import { signInPlayer } from "./store/effects";
+import { signInPlayerRequest } from "./state/player/player.actions";
 import Home from "./pages/Home";
 import Game from "./pages/Game";
+import { Root } from "./state/root.types";
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
   root: {
@@ -29,21 +29,22 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 const App: React.FC = () => {
   const classes = useStyles();
   const dispatch = useDispatch();
-  const isLoggedIn = useSelector((state: Store.ApplicationState) => !!state.player.id);
-  const currentGameId = useSelector((state: Store.ApplicationState) => state.player.currentGameId);
-  const leavingGame = useSelector((state: Store.ApplicationState) => state.loading.leavingGame);
+  const isLoggedIn = useSelector((state: Root.State) => !!state.player.data.id);
+  const gameLoaded = useSelector((state: Root.State) => state.game.loaded);
+  const gameLoading = useSelector((state: Root.State) => state.game.loading);
+  const gameId = useSelector((state: Root.State) => state.game.data.id);
 
   useEffect(() => {
-    dispatch(signInPlayer());
+    dispatch(signInPlayerRequest());
   }, [dispatch])
 
   return (
     <Box className={classes.root}>
-      <Fade in={!isLoggedIn}><CircularProgress className={classes.loading} /></Fade>
-      {isLoggedIn && <Container className={classes.root} maxWidth="md">
+      <Fade in={!isLoggedIn || gameLoading}><CircularProgress className={classes.loading} /></Fade>
+      {isLoggedIn && !gameLoading && <Container className={classes.root} maxWidth="md">
         <Typography variant="h1" className={classes.title}>CODYSNAMES</Typography>
-        {!leavingGame && currentGameId && <Game gameId={currentGameId} />}
-        {(!currentGameId || leavingGame) && <Home />}
+        {gameLoaded && <Game gameId={gameId} />}
+        {!gameLoaded && <Home />}
       </Container>}
     </Box>
   );
