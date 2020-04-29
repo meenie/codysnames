@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Grid, Button, Box, Typography } from '@material-ui/core';
+import { Grid, Button, Box, Typography, Paper } from '@material-ui/core';
 import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
 import classnames from 'classnames';
 import isEqual from 'lodash/isEqual';
@@ -9,7 +9,7 @@ import GameCard from '../components/GameCard';
 import { Root } from '../state/root.types';
 import { Game } from '../state/game/game.types';
 import { GameCard as IGameCard } from '../state/gameCard/gameCard.types';
-import { endTurnRequest } from '../state/game/game.actions';
+import { endTurnRequest, switchTeamsRequest } from '../state/game/game.actions';
 import {
   databasePushGameCardUpdate,
   databasePushGameCardStateUpdate,
@@ -21,6 +21,7 @@ import {
 import { getGameCardsWithState } from '../state/gameCard/gameCard.selectors';
 import { useCollection } from '../hooks/useCollection';
 import { db } from '../services/firebase';
+import PlayerList from './PlayerList';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -69,12 +70,6 @@ const useStyles = makeStyles((theme: Theme) =>
         fontSize: '1.8rem',
       },
     },
-    loading: {
-      color: 'white',
-      position: 'absolute',
-      right: 'calc(50% - 20px)',
-      top: '170px',
-    },
   })
 );
 
@@ -86,6 +81,15 @@ const GameBoard: React.FC = () => {
   const currentPlayerType = useSelector(getCurrentPlayerType);
   const currentPlayerColor = useSelector(getCurrentPlayerColor);
   const leavingGame = useSelector((state: Root.State) => state.game.leaving);
+  const { redSpymaster, blueSpymaster, redAgents, blueAgents } = useSelector(
+    (state: Root.State) => state.game.data
+  );
+  const playerType = useSelector(getCurrentPlayerType);
+  const playerColor = useSelector(getCurrentPlayerColor);
+
+  const switchTeamsHandler = () => {
+    dispatch(switchTeamsRequest());
+  };
 
   const whoWon = game.whoWon;
   const whosTurn = game.turn;
@@ -157,12 +161,50 @@ const GameBoard: React.FC = () => {
         </Typography>
       )}
 
-      <Grid container spacing={2} className={classes.cards}>
-        {cards.map((card) => (
-          <Grid key={card.id} item>
-            <GameCard card={card} />
+      <Grid container className={classes.cards}>
+        <Grid container justify="center">
+          <Grid item xs={2}>
+            <Paper>
+              <PlayerList
+                teamColor="blue"
+                agents={blueAgents}
+                spymaster={blueSpymaster}
+                teamName="Blue Team"
+                showJoinTeamButton={
+                  playerType === Game.PlayerType.Agent &&
+                  playerColor !== Game.TeamColor.Blue
+                }
+                showPromoteButton={false}
+                switchTeams={switchTeamsHandler}
+              />
+            </Paper>
           </Grid>
-        ))}
+          <Grid item xs={8}>
+            <Grid container spacing={2} justify="center">
+              {cards.map((card) => (
+                <Grid key={card.id} item>
+                  <GameCard card={card} />
+                </Grid>
+              ))}
+            </Grid>
+          </Grid>
+          <Grid item xs={2}>
+            <Paper>
+              <PlayerList
+                teamColor="red"
+                agents={redAgents}
+                spymaster={redSpymaster}
+                teamName="Red Team"
+                showJoinTeamButton={
+                  playerType === Game.PlayerType.Agent &&
+                  playerColor !== Game.TeamColor.Red
+                }
+                showPromoteButton={false}
+                switchTeams={switchTeamsHandler}
+              />
+            </Paper>
+          </Grid>
+        </Grid>
       </Grid>
     </Box>
   );

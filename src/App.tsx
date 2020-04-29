@@ -49,7 +49,7 @@ const App: React.FC = () => {
       </Fade>
       {isLoggedIn &&
       !gameLoading && (
-        <Container className={classes.root} maxWidth="md">
+        <Container className={classes.root}>
           <Typography variant="h1" className={classes.title}>
             CODYSNAMES
           </Typography>

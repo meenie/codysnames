@@ -24,6 +24,7 @@ import {
   loadGameError,
   loadGameComplete,
   loadGameRequest,
+  gameStateUpdated,
 } from './game.actions';
 import {
   databasePushGameCardUpdate,
@@ -175,7 +176,7 @@ function* promotePlayerToSpymaster(action: Game.PromoteToSpymasterRequest) {
 
 function* endTurn() {
   try {
-    const game: Game.Entity = yield select((state: Root.State) => state.game);
+    const game: Game.Entity = yield select((state: Root.State) => state.game.data);
 
     if (!game) {
       return;
@@ -413,6 +414,7 @@ function* updateStateOfGame(action: GameCard.FlipGameCardComplete) {
   });
 
   yield call(setGameData, newGameData);
+  yield put(gameStateUpdated(newGameData));
 }
 
 function* switchTeamsListener() {

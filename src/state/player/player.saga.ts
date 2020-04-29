@@ -1,6 +1,6 @@
 import { all, call, fork, takeEvery, put, select } from 'redux-saga/effects';
 
-import { db, auth, analytics } from '../../services/firebase';
+import { db, auth } from '../../services/firebase';
 import { Player } from './player.types';
 import { Root } from '../root.types';
 import {
@@ -16,13 +16,8 @@ import produce from 'immer';
 
 const signInAnonymously = async () => {
   const credential = await auth.signInAnonymously();
-  const user = credential.user;
-  if (user) {
-    analytics.logEvent('login', { method: 'anonymous' });
-    analytics.setUserId(user.uid);
-  }
 
-  return user && user.uid;
+  return credential.user && credential.user.uid;
 };
 
 const savePlayerData = async (player: Player.Entity) => {

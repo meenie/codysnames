@@ -125,3 +125,8 @@ export const endTurnError = (error: Error): Game.EndTurnError => ({
   type: Game.ActionTypes.EndTurnError,
   error,
 });
+
+export const gameStateUpdated = (game: Game.Entity): Game.GameStateUpdated => ({
+  type: Game.ActionTypes.GameStateUpdated,
+  game,
+});

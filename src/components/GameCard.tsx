@@ -13,8 +13,8 @@ import { Game } from '../state/game/game.types';
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
-      height: 130,
-      width: 169,
+      width: 140,
+      height: 120,
       textAlign: 'center',
       display: 'flex',
       flexDirection: 'column',
@@ -47,14 +47,14 @@ const useStyles = makeStyles((theme: Theme) =>
     flipped: {
       border: '8px solid white',
     },
-    fontSize30: {
-      fontSize: '30px',
+    fontSizeSm: {
+      fontSize: '20px',
     },
-    fontSize35: {
+    fontSizeMd: {
+      fontSize: '25px',
+    },
+    fontSizeLg: {
       fontSize: '35px',
-    },
-    fontSize45: {
-      fontSize: '45px',
     },
   })
 );
@@ -94,9 +94,9 @@ const GameCard: React.FC<{ card: IGameCard.GameCardEntityWithStateEntity }> = ({
       (card.state.flipped || isSpymaster || gameOver) &&
       card.state.type === IGameCard.CardType.Assassin,
     [classes.flipped]: card.state.flipped,
-    [classes.fontSize30]: card.name.length >= 10,
-    [classes.fontSize35]: card.name.length >= 8 && card.name.length < 10,
-    [classes.fontSize45]: card.name.length < 8,
+    [classes.fontSizeSm]: card.name.length >= 10,
+    [classes.fontSizeMd]: card.name.length >= 8 && card.name.length < 10,
+    [classes.fontSizeLg]: card.name.length < 8,
   });
   return (
     <Paper

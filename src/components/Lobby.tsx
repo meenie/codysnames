@@ -49,7 +49,11 @@ const Lobby: React.FC = () => {
   };
 
   const canStartGame =
-    !!blueSpymaster && !!redSpymaster && blueAgents.length > 0 && redAgents.length > 0;
+    (!!blueSpymaster &&
+      !!redSpymaster &&
+      blueAgents.length > 0 &&
+      redAgents.length > 0) ||
+    true;
 
   return (
     <Box className={classes.root}>

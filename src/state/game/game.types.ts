@@ -72,6 +72,7 @@ export namespace Game {
     EndTurnRequest = 'Game: Request to end turn',
     EndTurnComplete = 'Game: Successfully ended turn',
     EndTurnError = 'Game: Error reported from ending turn',
+    GameStateUpdated = 'Game: State of game updated',
   }
 
   export interface DatabasePushUpdate extends Action {
@@ -194,6 +195,11 @@ export namespace Game {
     error: Error;
   }
 
+  export interface GameStateUpdated extends Action {
+    type: ActionTypes.GameStateUpdated;
+    game: Entity;
+  }
+
   export type Actions =
     | DatabasePushUpdate
     | CreateGameRequest
@@ -219,5 +225,6 @@ export namespace Game {
     | PromoteToSpymasterError
     | EndTurnRequest
     | EndTurnComplete
-    | EndTurnError;
+    | EndTurnError
+    | GameStateUpdated;
 }

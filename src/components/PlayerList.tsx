@@ -45,7 +45,7 @@ const Lobby: React.FC<{
   teamName: string;
   showJoinTeamButton: boolean;
   showPromoteButton: boolean;
-  promoteToSpymaster: (player: Player.Entity) => void;
+  promoteToSpymaster?: (player: Player.Entity) => void;
   switchTeams: () => void;
 }> = ({
   teamColor,
@@ -107,7 +107,9 @@ const Lobby: React.FC<{
           <ListItemText primary={agent.name} />
           {showPromoteButton && (
             <ListItemSecondaryAction>
-              <IconButton edge="end" onClick={() => promoteToSpymaster(agent)}>
+              <IconButton
+                edge="end"
+                onClick={() => promoteToSpymaster && promoteToSpymaster(agent)}>
                 <Tooltip title="Promote to Spymaster">
                   <ArrowUpwardIcon className={classes.icon} />
                 </Tooltip>
