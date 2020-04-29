@@ -4,6 +4,7 @@ import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
 import classnames from 'classnames';
 import isEqual from 'lodash/isEqual';
 import { useDispatch, useSelector } from 'react-redux';
+import { Skeleton } from '@material-ui/lab';
 
 import GameCard from '../components/GameCard';
 import { Root } from '../state/root.types';
@@ -70,6 +71,9 @@ const useStyles = makeStyles((theme: Theme) =>
         fontSize: '1.8rem',
       },
     },
+    loadingTile: {
+      borderRadius: '4px',
+    },
   })
 );
 
@@ -132,10 +136,6 @@ const GameBoard: React.FC = () => {
     [ game.id, currentPlayerType, game.status ]
   );
 
-  if (cards.length === 0) {
-    return <p>&nbsp;</p>;
-  }
-
   return (
     <Box className={classes.root}>
       {gameStatus === Game.Status.Over && (
@@ -181,6 +181,18 @@ const GameBoard: React.FC = () => {
           </Grid>
           <Grid item xs={8}>
             <Grid container spacing={2} justify="center">
+              {cards.length === 0 &&
+                Array(25).fill(null).map((_, i) => (
+                  <Grid key={`skeleton-${i}`} item>
+                    <Skeleton
+                      className={classes.loadingTile}
+                      variant="rect"
+                      width={140}
+                      height={120}
+                      animation="wave"
+                    />
+                  </Grid>
+                ))}
               {cards.map((card) => (
                 <Grid key={card.id} item>
                   <GameCard card={card} />
