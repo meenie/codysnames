@@ -1,37 +1,38 @@
-import React, { memo, useState } from "react";
+import React, { memo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { TextField, Button, Grid, Typography } from '@material-ui/core';
 import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
 
 import { createGameRequest } from '../state/game/game.actions';
 import { joinGameRequest } from '../state/player/player.actions';
-import { Root } from "../state/root.types";
+import { Root } from '../state/root.types';
 
-
-const useStyles = makeStyles((theme: Theme) => createStyles({
-  title: {
-    textAlign: 'center'
-  },
-  gameCodeContainer: {
-    textAlign: 'center'
-  },
-  gameCodeTextField: {
-    width: '190px',
-    '& input': {
-      fontSize: '2rem',
-      textTransform: 'uppercase',
+const useStyles = makeStyles((theme: Theme) =>
+  createStyles({
+    title: {
       textAlign: 'center',
-      padding: '15px'
     },
-    '& label': {
-      lineHeight: '1.9rem'
-    }
-  }
-}))
+    gameCodeContainer: {
+      textAlign: 'center',
+    },
+    gameCodeTextField: {
+      width: '190px',
+      '& input': {
+        fontSize: '2rem',
+        textTransform: 'uppercase',
+        textAlign: 'center',
+        padding: '15px',
+      },
+      '& label': {
+        lineHeight: '1.9rem',
+      },
+    },
+  })
+);
 
 const GameStart: React.FC = () => {
   const classes = useStyles();
-  const [gameId, setGameId] = useState<string | undefined>();
+  const [ gameId, setGameId ] = useState<string | undefined>();
   const creatingGame = useSelector((state: Root.State) => state.game.creating);
   const dispatch = useDispatch();
 
@@ -59,26 +60,28 @@ const GameStart: React.FC = () => {
             onChange={(ev) => setGameId(ev.target.value)}
             onKeyPress={(ev) => {
               if (ev.key === 'Enter' && gameId && gameId.length === 4) {
-                dispatch(joinGameRequest(gameId.toLowerCase()))
+                dispatch(joinGameRequest(gameId.toLowerCase()));
                 ev.preventDefault();
               }
-            }} />
+            }}
+          />
         </Grid>
-        <Grid item xs={2}>&nbsp;</Grid>
+        <Grid item xs={2}>
+          &nbsp;
+        </Grid>
         <Grid item xs={5}>
           <Button
             color="primary"
             variant="contained"
             fullWidth
             disabled={creatingGame}
-            onClick={() => dispatch(createGameRequest())}
-          >
+            onClick={() => dispatch(createGameRequest())}>
             {creatingGame ? 'Creating Game...' : 'Create Game'}
           </Button>
         </Grid>
       </Grid>
     </React.Fragment>
   );
-}
+};
 
 export default memo(GameStart);

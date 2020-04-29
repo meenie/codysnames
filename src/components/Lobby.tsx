@@ -1,68 +1,78 @@
-import React, { memo } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import React, { memo } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { Grid, Box, Button, Typography, Paper } from '@material-ui/core';
-import { makeStyles, Theme, createStyles } from "@material-ui/core/styles";
+import { makeStyles, Theme, createStyles } from '@material-ui/core/styles';
 
-import PlayerList from "./PlayerList";
-import { promoteToSpymasterRequest, switchTeamsRequest, startGameRequest } from "../state/game/game.actions";
-import { getCurrentPlayerType, getCurrentPlayerColor } from "../state/player/player.selectors";
-import { Root } from "../state/root.types";
-import { Game } from "../state/game/game.types";
-import { Player } from "../state/player/player.types";
+import PlayerList from './PlayerList';
+import {
+  promoteToSpymasterRequest,
+  switchTeamsRequest,
+  startGameRequest,
+} from '../state/game/game.actions';
+import {
+  getCurrentPlayerType,
+  getCurrentPlayerColor,
+} from '../state/player/player.selectors';
+import { Root } from '../state/root.types';
+import { Game } from '../state/game/game.types';
+import { Player } from '../state/player/player.types';
 
-
-const useStyles = makeStyles((theme: Theme) => createStyles({
-  root: {
-    textAlign: 'center'
-  },
-  startGame: {
-    marginBottom: theme.spacing(3)
-  }
-}));
+const useStyles = makeStyles((theme: Theme) =>
+  createStyles({
+    root: {
+      textAlign: 'center',
+    },
+    startGame: {
+      marginBottom: theme.spacing(3),
+    },
+  })
+);
 
 const Lobby: React.FC = () => {
   const classes = useStyles();
   const dispatch = useDispatch();
   const gameStarting = useSelector((state: Root.State) => state.game.starting);
-  const {
-    redSpymaster,
-    blueSpymaster,
-    redAgents,
-    blueAgents,
-    id
-  } = useSelector((state: Root.State) => state.game.data);
+  const { redSpymaster, blueSpymaster, redAgents, blueAgents, id } = useSelector(
+    (state: Root.State) => state.game.data
+  );
   const playerType = useSelector(getCurrentPlayerType);
   const playerColor = useSelector(getCurrentPlayerColor);
-  const isBlueSpymaster = playerType === Game.PlayerType.Spymaster && playerColor === Game.TeamColor.Blue;
+  const isBlueSpymaster =
+    playerType === Game.PlayerType.Spymaster && playerColor === Game.TeamColor.Blue;
 
   const promoteToSpymasterHandler = (player: Player.Entity) => {
-    dispatch(promoteToSpymasterRequest(player))
-  }
+    dispatch(promoteToSpymasterRequest(player));
+  };
 
   const switchTeamsHandler = () => {
-    dispatch(switchTeamsRequest())
-  }
+    dispatch(switchTeamsRequest());
+  };
 
   const canStartGame =
-    !!blueSpymaster &&
-    !!redSpymaster &&
-    blueAgents.length > 0 &&
-    redAgents.length > 0
+    !!blueSpymaster && !!redSpymaster && blueAgents.length > 0 && redAgents.length > 0;
 
   return (
     <Box className={classes.root}>
-      {isBlueSpymaster && <Box className={classes.startGame}>
-        {canStartGame && <Button
-          variant="contained"
-          color="primary"
-          disabled={gameStarting}
-          onClick={() => {
-            dispatch(startGameRequest(id))
-          }}>
-          {gameStarting ? 'Game Starting...' : 'Start Game'}
-        </Button>}
-        {!canStartGame && <Typography>There needs to be at least 4 players to start the game!</Typography>}
-      </Box>}
+      {isBlueSpymaster && (
+        <Box className={classes.startGame}>
+          {canStartGame && (
+            <Button
+              variant="contained"
+              color="primary"
+              disabled={gameStarting}
+              onClick={() => {
+                dispatch(startGameRequest(id));
+              }}>
+              {gameStarting ? 'Game Starting...' : 'Start Game'}
+            </Button>
+          )}
+          {!canStartGame && (
+            <Typography>
+              There needs to be at least 4 players to start the game!
+            </Typography>
+          )}
+        </Box>
+      )}
       <Grid container item xs={12} spacing={2} justify="center" alignItems="flex-start">
         <Grid item xs={4}>
           <Paper>
@@ -71,10 +81,17 @@ const Lobby: React.FC = () => {
               agents={blueAgents}
               spymaster={blueSpymaster}
               teamName="Blue Team"
-              showJoinTeamButton={playerType === Game.PlayerType.Agent && playerColor !== Game.TeamColor.Blue}
-              showPromoteButton={playerType === Game.PlayerType.Spymaster && playerColor === Game.TeamColor.Blue}
+              showJoinTeamButton={
+                playerType === Game.PlayerType.Agent &&
+                playerColor !== Game.TeamColor.Blue
+              }
+              showPromoteButton={
+                playerType === Game.PlayerType.Spymaster &&
+                playerColor === Game.TeamColor.Blue
+              }
               promoteToSpymaster={promoteToSpymasterHandler}
-              switchTeams={switchTeamsHandler} />
+              switchTeams={switchTeamsHandler}
+            />
           </Paper>
         </Grid>
         <Grid item xs={4}>
@@ -84,15 +101,21 @@ const Lobby: React.FC = () => {
               agents={redAgents}
               spymaster={redSpymaster}
               teamName="Red Team"
-              showJoinTeamButton={playerType === Game.PlayerType.Agent && playerColor !== Game.TeamColor.Red}
-              showPromoteButton={playerType === Game.PlayerType.Spymaster && playerColor === Game.TeamColor.Red}
+              showJoinTeamButton={
+                playerType === Game.PlayerType.Agent && playerColor !== Game.TeamColor.Red
+              }
+              showPromoteButton={
+                playerType === Game.PlayerType.Spymaster &&
+                playerColor === Game.TeamColor.Red
+              }
               promoteToSpymaster={promoteToSpymasterHandler}
-              switchTeams={switchTeamsHandler} />
+              switchTeams={switchTeamsHandler}
+            />
           </Paper>
         </Grid>
       </Grid>
     </Box>
-  )
+  );
 };
 
 export default memo(Lobby);

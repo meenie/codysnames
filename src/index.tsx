@@ -1,20 +1,24 @@
-import React from "react";
-import ReactDOM from "react-dom";
-import CssBaseLine from "@material-ui/core/CssBaseline";
-import { ThemeProvider } from "@material-ui/core/styles";
-import { applyMiddleware, createStore } from "redux";
+import React from 'react';
+import ReactDOM from 'react-dom';
+import CssBaseLine from '@material-ui/core/CssBaseline';
+import { ThemeProvider } from '@material-ui/core/styles';
+import { applyMiddleware, createStore } from 'redux';
 import createSagaMiddleware from 'redux-saga';
-import { Provider } from "react-redux";
-import { composeWithDevTools } from "redux-devtools-extension";
+import { Provider } from 'react-redux';
+import { composeWithDevTools } from 'redux-devtools-extension';
 
 import theme from './theme';
-import reducer, { initialState } from "./state/root.reducers";
-import App from "./App";
-import * as serviceWorker from "./serviceWorker";
-import rootSaga from "./state/root.saga";
+import reducer, { initialState } from './state/root.reducers';
+import App from './App';
+import * as serviceWorker from './serviceWorker';
+import rootSaga from './state/root.saga';
 
 const sagaMiddleware = createSagaMiddleware();
-const composeEnhancers = composeWithDevTools({ trace: true, traceLimit: 25, shouldHotReload: false });
+const composeEnhancers = composeWithDevTools({
+  trace: true,
+  traceLimit: 25,
+  shouldHotReload: false,
+});
 const store = createStore(
   reducer,
   initialState,
@@ -29,7 +33,7 @@ ReactDOM.render(
       <App />
     </ThemeProvider>
   </Provider>,
-  document.getElementById("root")
+  document.getElementById('root')
 );
 
 // If you want your app to work offline and load faster, you can change
