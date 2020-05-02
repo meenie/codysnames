@@ -1,4 +1,4 @@
-import { all, call, fork, takeEvery, put, select } from 'redux-saga/effects';
+import { all, call, fork, takeEvery, put, select, takeLatest } from 'redux-saga/effects';
 import produce from 'immer';
 
 import { db } from '../../services/firebase';
@@ -37,6 +37,7 @@ import {
   getGameCards,
   getGameCardStates,
 } from '../gameCard/gameCard.saga';
+import { GameClue } from '../gameClue/gameClue.types';
 
 const getUniqueGameId = async () => {
   let gameId;
@@ -183,8 +184,18 @@ function* endTurn() {
     }
 
     const newGameData = produce(game, (draft) => {
+      const currentTurn = draft.turn;
       draft.turn =
         draft.turn === Game.TeamColor.Blue ? Game.TeamColor.Red : Game.TeamColor.Blue;
+      draft.clue = '';
+      if (currentTurn === Game.TeamColor.Blue) {
+        draft.blueHasExtraGuess = draft.numberOfGuesses > 0;
+      }
+      if (currentTurn === Game.TeamColor.Red) {
+        draft.redHasExtraGuess = draft.numberOfGuesses > 0;
+      }
+
+      draft.numberOfGuesses = -1;
     });
 
     yield call(setGameData, newGameData);
@@ -331,6 +342,9 @@ function* createGame() {
       status: Game.Status.Open,
       turn: Game.TeamColor.Blue, // This will get randomly set in createGameCards()
       doubleAgent: Game.TeamColor.Blue, // This will get randomly set in createGameCards()
+      redHasExtraGuess: false,
+      blueHasExtraGuess: false,
+      numberOfGuesses: -1,
     };
 
     yield call(setGameData, gameData);
@@ -385,36 +399,98 @@ function* updateStateOfGame(action: GameCard.FlipGameCardComplete) {
   const redCardWinCount = gameData.doubleAgent === Game.TeamColor.Red ? 9 : 8;
 
   const newGameData = produce(gameData, (draft) => {
+    // Rule: Flipped Assassin card, game over.
     if (gameCardStateData.type === GameCard.CardType.Assassin) {
       draft.status = Game.Status.Over;
       draft.whoWon =
         gameData.turn === Game.TeamColor.Blue ? Game.TeamColor.Red : Game.TeamColor.Blue;
+      // Rule: Flipped Bystander card, round automatically over and it's now the other teams turn
     } else if (gameCardStateData.type === GameCard.CardType.Bystander) {
       draft.turn =
         gameData.turn === Game.TeamColor.Blue ? Game.TeamColor.Red : Game.TeamColor.Blue;
+      draft.clue = '';
+      draft.numberOfGuesses = -1;
+      // Blue Teams Flip
     } else if (gameData.turn === Game.TeamColor.Blue) {
-      if (gameCardStateData.type === GameCard.CardType.RedTeam) {
-        draft.turn = Game.TeamColor.Red;
-      }
-
+      // Rule: Blue team flipped all their cards, they win
       if (blueCardWinCount === blueCardsFlipped.length) {
         draft.status = Game.Status.Over;
         draft.whoWon = Game.TeamColor.Blue;
+      } else {
+        // Rule: Blue team flipped a red card, round automatically over and it's now other teams turn
+        if (gameCardStateData.type === GameCard.CardType.RedTeam) {
+          draft.turn = Game.TeamColor.Red;
+          draft.clue = '';
+          draft.numberOfGuesses = -1;
+        } else {
+          // Decrement number of guesses allowed. 9 and 10 have special meaning
+          if (draft.numberOfGuesses < 9) {
+            draft.numberOfGuesses--;
+          }
+
+          // Rule: If 0, check to see if they have an extra guess or if round over
+          if (draft.numberOfGuesses === 0) {
+            // If they have extra guess, increment numberOfGuesses
+            if (draft.blueHasExtraGuess) {
+              draft.numberOfGuesses++;
+              draft.blueHasExtraGuess = false;
+            } else {
+              // Rule: No more guesses left, it's now Reds turn
+              draft.turn = Game.TeamColor.Red;
+              draft.clue = '';
+              draft.numberOfGuesses = -1;
+            }
+          }
+        }
       }
     } else if (gameData.turn === Game.TeamColor.Red) {
-      if (gameCardStateData.type === GameCard.CardType.BlueTeam) {
-        draft.turn = Game.TeamColor.Blue;
-      }
-
+      // Rule: Red team flipped all their cards, they win
       if (redCardWinCount === redCardsFlipped.length) {
         draft.status = Game.Status.Over;
         draft.whoWon = Game.TeamColor.Red;
+      } else {
+        // Rule: Red team flipped a blue card, round automatically over and it's now other teams turn
+        if (gameCardStateData.type === GameCard.CardType.BlueTeam) {
+          draft.turn = Game.TeamColor.Blue;
+          draft.clue = '';
+          draft.numberOfGuesses = -1;
+        } else {
+          // Decrement number of guesses allowed. 9 and 10 have special meaning
+          if (draft.numberOfGuesses < 9) {
+            draft.numberOfGuesses--;
+          }
+          // Rule: If 0, check to see if they have an extra guess or if round over
+          if (draft.numberOfGuesses === 0) {
+            // If they have extra guess, increment numberOfGuesses
+            if (draft.redHasExtraGuess) {
+              draft.numberOfGuesses++;
+              draft.redHasExtraGuess = false;
+            } else {
+              // Rule: No more guesses left, it's now Blues turn
+              draft.turn = Game.TeamColor.Blue;
+              draft.clue = '';
+              draft.numberOfGuesses = -1;
+            }
+          }
+        }
       }
     }
   });
 
   yield call(setGameData, newGameData);
   yield put(gameStateUpdated(newGameData));
+}
+
+function* setLatestClue(action: GameClue.CreateClueComplete) {
+  const gameId = action.gameClue.gameId;
+  const gameData: Game.Entity = yield call(getGameData, gameId);
+
+  const newGameData = produce(gameData, (draft) => {
+    draft.numberOfGuesses = action.gameClue.numberOfGuesses;
+    draft.clue = action.gameClue.clue;
+  });
+
+  yield call(setGameData, newGameData);
 }
 
 function* switchTeamsListener() {
@@ -453,6 +529,10 @@ function* updateStateOfGameListener() {
   yield takeEvery(GameCard.ActionTypes.FlipGameCardComplete, updateStateOfGame);
 }
 
+function* setLatestClueListener() {
+  yield takeLatest(GameClue.ActionTypes.CreateClueComplete, setLatestClue);
+}
+
 export function* gameSaga() {
   yield all([
     fork(switchTeamsListener),
@@ -464,5 +544,6 @@ export function* gameSaga() {
     fork(createGameListner),
     fork(seedExistingGameListener),
     fork(updateStateOfGameListener),
+    fork(setLatestClueListener),
   ]);
 }

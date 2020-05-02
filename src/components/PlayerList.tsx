@@ -38,7 +38,7 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 );
 
-const Lobby: React.FC<{
+const PlayerList: React.FC<{
   teamColor: 'red' | 'blue';
   agents: Player.Entity[];
   spymaster: Player.Entity;
@@ -82,9 +82,18 @@ const Lobby: React.FC<{
             <LocalLibraryIcon className={classes.icon} />
           </Tooltip>
         </ListItemIcon>
-        {!!spymaster.name && <ListItemText primary={spymaster.name} />}
+        {!!spymaster.name && (
+          <ListItemText
+            disableTypography={true}
+            primary={<Typography variant="body2">{spymaster.name}</Typography>}
+          />
+        )}
         {!spymaster.name && (
-          <ListItemText className={classes.notFilled} primary="Not Filled" />
+          <ListItemText
+            disableTypography={true}
+            className={classes.notFilled}
+            primary={<Typography variant="body2">Not Filled</Typography>}
+          />
         )}
       </ListItem>
       {noAgents && (
@@ -94,7 +103,11 @@ const Lobby: React.FC<{
               <AccountBoxIcon className={classes.icon} />
             </Tooltip>
           </ListItemIcon>
-          <ListItemText className={classes.notFilled} primary="Not Filled" />
+          <ListItemText
+            disableTypography={true}
+            className={classes.notFilled}
+            primary={<Typography variant="body2">Not Filled</Typography>}
+          />
         </ListItem>
       )}
       {agents.map((agent) => (
@@ -104,7 +117,10 @@ const Lobby: React.FC<{
               <AccountBoxIcon className={classes.icon} />
             </Tooltip>
           </ListItemIcon>
-          <ListItemText primary={agent.name} />
+          <ListItemText
+            disableTypography={true}
+            primary={<Typography variant="body2">{agent.name}</Typography>}
+          />
           {showPromoteButton && (
             <ListItemSecondaryAction>
               <IconButton
@@ -122,4 +138,4 @@ const Lobby: React.FC<{
   );
 };
 
-export default memo(Lobby);
+export default memo(PlayerList);

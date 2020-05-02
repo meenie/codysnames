@@ -12,6 +12,9 @@ export const blankGame: Game.Entity = {
   redSpymaster: blankPlayer,
   blueAgents: [],
   redAgents: [],
+  blueHasExtraGuess: false,
+  redHasExtraGuess: false,
+  numberOfGuesses: -1,
 };
 
 export const gameInitialState: Game.State = {

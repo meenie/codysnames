@@ -11,6 +11,20 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    match /gameClues/{gameClueId} {
+      function playerInCurrentGame() {
+        return resource.data.gameId == get(/databases/$(database)/documents/players/$(request.auth.uid)).data.currentGameId
+      }
+
+      function gameIsOver() {
+        return getAfter(/databases/$(database)/documents/games/$(resource.data.gameId)).data.status == 'OVER'
+      }
+
+      allow read: if playerInCurrentGame() && gameIsOver();
+      allow create: if request.auth.uid != null;
+      allow update, delete: if false;
+    }
+
     match /gameCardState/{gameCardStateId} {
       function playerIsBlueSpymaster() {
         return request.auth.uid == get(/databases/$(database)/documents/games/$(resource.data.gameId)).data.blueSpymaster.id

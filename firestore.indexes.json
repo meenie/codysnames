@@ -12,6 +12,19 @@
           "mode": "ASCENDING"
         }
       ]
+    },
+    {
+      "collectionId": "gameClues",
+      "fields": [
+        {
+          "fieldPath": "gamerId",
+          "mode": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "mode": "ASCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": []

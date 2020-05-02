@@ -13,6 +13,7 @@ interface FirebaseHookHandlers {
   subscribe?: () => void;
   error?: (error: Error) => void;
   unsubscribe?: () => void;
+  shouldConnect?: boolean;
 }
 
 interface CollectionHandlers<T extends Entity> extends FirebaseHookHandlers {
@@ -25,6 +26,10 @@ export const useCollection = <T extends Entity>(
   deps: any[]
 ) => {
   useEffect(() => {
+    if (typeof handlers.shouldConnect !== 'undefined' && !handlers.shouldConnect) {
+      return () => {};
+    }
+
     handlers.subscribe && handlers.subscribe();
     const unsubscribeFromQuery = query().onSnapshot(
       { includeMetadataChanges: true },

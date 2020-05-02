@@ -469,7 +469,6 @@ const names = [
   'pen',
   'pencil',
   'pendulum',
-  'penis',
   'penny',
   'pepper',
   'personal',
