@@ -134,7 +134,8 @@ function* flipGameCard(action: GameCard.FlipGameCardRequest) {
     player.id === gameData.blueSpymaster.id || // Spymasters can't flip cards!
     player.id === gameData.redSpymaster.id || // Spymasters can't flip cards!
     currentTurn !== currentPlayerColor || // This isn't your team, man. You can't flip a card!
-    gameData.status === Game.Status.Over // Game over, man! Game over!
+    gameData.status === Game.Status.Over || // Game over, man! Game over!
+    gameData.numberOfGuesses === -1 // Spymaster has not provided a clue, yet.
   ) {
     return;
   }

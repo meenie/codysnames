@@ -32,7 +32,7 @@ const useStyles = makeStyles((theme: Theme) =>
       position: 'relative',
       '& button': {
         position: 'absolute',
-        right: 0,
+        right: -16,
       },
     },
   })

@@ -6,11 +6,14 @@ import isEqual from 'lodash/isEqual';
 import { useDispatch, useSelector } from 'react-redux';
 import { Skeleton } from '@material-ui/lab';
 
-import GameCard from '../components/GameCard';
+import { useCollection } from '../hooks/useCollection';
+import { db } from '../services/firebase';
 import { Root } from '../state/root.types';
 import { Game } from '../state/game/game.types';
 import { GameCard as IGameCard } from '../state/gameCard/gameCard.types';
+import { GameClue as IGameClue } from '../state/gameClue/gameClue.types';
 import { endTurnRequest, switchTeamsRequest } from '../state/game/game.actions';
+import { databasePushUpdate as databasePushGameClueUpdate } from '../state/gameClue/gameClue.actions';
 import {
   databasePushGameCardUpdate,
   databasePushGameCardStateUpdate,
@@ -20,13 +23,10 @@ import {
   getCurrentPlayerColor,
 } from '../state/player/player.selectors';
 import { getGameCardsWithState } from '../state/gameCard/gameCard.selectors';
-import { useCollection } from '../hooks/useCollection';
-import { db } from '../services/firebase';
+import GameCard from './GameCard';
 import PlayerList from './PlayerList';
 import GameClue from './GameClue';
 import GameCluesList from './GameCluesList';
-import { GameClue as IGameClue } from '../state/gameClue/gameClue.types';
-import { databasePushUpdate as databasePushGameClueUpdate } from '../state/gameClue/gameClue.actions';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -107,10 +107,11 @@ const GameBoard: React.FC = () => {
   const whosTurn = game.turn;
   const bluesTurn = whosTurn === Game.TeamColor.Blue;
   const redsTurn = whosTurn === Game.TeamColor.Red;
-  const yourTurn = currentPlayerColor === whosTurn;
   const gameStatus = game.status;
+  const yourTurn =
+    currentPlayerColor === whosTurn && gameStatus === Game.Status.InSession;
   const clue = game.clue;
-  const noOfGuesses = game.numberOfGuesses;
+  const noOfGuesses = game.numberOfGuesses || -1;
   const isSpymaster = currentPlayerType === Game.PlayerType.Spymaster;
   let noOfGuessesText: string;
   if (noOfGuesses === 10) {
