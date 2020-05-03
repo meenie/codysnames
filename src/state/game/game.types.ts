@@ -27,7 +27,11 @@ export namespace Game {
     redSpymaster: Player.Entity;
     blueAgents: Player.Entity[];
     redAgents: Player.Entity[];
+    blueHasExtraGuess: boolean;
+    redHasExtraGuess: boolean;
+    numberOfGuesses: number;
     whoWon?: TeamColor;
+    clue?: string;
   }
 
   export enum Status {
