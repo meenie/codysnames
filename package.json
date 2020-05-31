@@ -44,10 +44,11 @@
     "dev": "run-p --race dev:firebase dev:react",
     "dev:react": "rescripts start",
     "dev:firebase": "firebase serve -p 4000",
-    "build": "rescripts build",
+    "build": "rescripts build && yarn --cwd ./functions lint && yarn --cwd ./functions build",
     "test": "rescripts test",
     "eject": "react-scripts eject",
-    "deploy": "firebase deploy --only hosting"
+    "deploy_hosting": "firebase deploy --only hosting",
+    "deploy_functions": "firebase deploy --only functions"
   },
   "proxy": "http://localhost:4000",
   "rescripts": [
@@ -70,11 +71,7 @@
     "extends": "react-app"
   },
   "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
+    "production": [ ">0.2%", "not dead", "not op_mini all" ],
     "development": [
       "last 1 chrome version",
       "last 1 firefox version",
