@@ -43,6 +43,11 @@ jobs:
         with:
           name: functions_files
           path: functions/lib
+      - name: Archive Functions Node Modules Artifact
+        uses: actions/upload-artifact@master
+        with:
+          name: functions_node_modules_files
+          path: functions/node_modules
   deploy_functions:
     name: Deploy Functions
     needs: build
@@ -55,6 +60,11 @@ jobs:
         with:
           name: functions_files
           path: functions/lib
+      - name: Download Node Modules Artifact
+        uses: actions/download-artifact@master
+        with:
+          name: functions_node_modules_files
+          path: functions/node_modules
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
         with:
