@@ -6,6 +6,7 @@
 /functions/.runtimeconfig.json
 /.pnp
 .pnp.js
+/hasura/.env
 
 # testing
 /coverage

@@ -1,0 +1,9 @@
+- function:
+    schema: public
+    name: game_agents
+- function:
+    schema: public
+    name: game_blue_agents
+- function:
+    schema: public
+    name: game_red_agents
