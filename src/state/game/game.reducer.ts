@@ -2,7 +2,7 @@ import produce from 'immer';
 
 import { Game } from './game.types';
 import { blankPlayer } from '../player/player.reducer';
-import { blankCardState } from '../gameCard/gameCard.reducer';
+import { GameCard } from '../gameCard/gameCard.types';
 
 export const blankGame: Game.Entity = {
   id: '',
@@ -33,6 +33,7 @@ export const gameInitialState: Game.State = {
   started: false,
   leaving: false,
   left: false,
+  flippingCard: false,
   data: blankGame,
   error: false,
   errors: [],
@@ -40,6 +41,8 @@ export const gameInitialState: Game.State = {
 
 const setDefaults = (game: Game.Entity) => {
   return produce(game, (draft) => {
+    // @ts-ignore
+    delete draft.__typename;
     if (!draft.red_spymaster) {
       draft.red_spymaster = blankPlayer;
     }
@@ -51,9 +54,10 @@ const setDefaults = (game: Game.Entity) => {
         return {
           ...card,
           state: {
-            ...blankCardState,
             id: card.game_card_state_id,
             game_id: card.game_id,
+            type: GameCard.CardType.Unkown,
+            flipped: false,
           },
         };
       } else {
@@ -66,11 +70,12 @@ const setDefaults = (game: Game.Entity) => {
 const reducer = (state = gameInitialState, action: Game.Actions) => {
   switch (action.type) {
     case Game.ActionTypes.DatabasePushUpdate:
+    case Game.ActionTypes.GameStateUpdated:
       return produce(state, (draft) => {
         draft.data = setDefaults(action.game);
         draft.loaded = true;
+        draft.flippingCard = false;
       });
-
     case Game.ActionTypes.LeaveGameRequest:
       return produce(state, (draft) => {
         draft.leaving = true;
@@ -135,6 +140,14 @@ const reducer = (state = gameInitialState, action: Game.Actions) => {
         draft.loaded = true;
         draft.data = setDefaults(action.game);
       });
+    case Game.ActionTypes.FlipCardRequest:
+      return produce(state, (draft) => {
+        draft.flippingCard = true;
+      });
+    case Game.ActionTypes.FlipCardComplete:
+      return produce(state, (draft) => {
+        draft.flippingCard = false;
+      });
     case Game.ActionTypes.CreateGameError:
     case Game.ActionTypes.JoinGameError:
     case Game.ActionTypes.LeaveGameError:
@@ -151,6 +164,7 @@ const reducer = (state = gameInitialState, action: Game.Actions) => {
         draft.starting = false;
         draft.leaving = false;
         draft.left = false;
+        draft.flippingCard = false;
         draft.error = true;
         draft.errors.push(action.error);
         draft.data = blankGame;

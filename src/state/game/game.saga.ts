@@ -24,6 +24,7 @@ import {
   loadGameComplete,
   loadGameRequest,
   gameStateUpdated,
+  flipCardComplete,
 } from './game.actions';
 import { blankGame } from './game.reducer';
 import { GameClue } from '../gameClue/gameClue.types';
@@ -460,6 +461,7 @@ function* updateStateOfGame(action: GameCard.FlipGameCardComplete) {
   });
   yield call(setGameData, client, newGameData);
   yield put(gameStateUpdated(newGameData));
+  yield put(flipCardComplete());
 }
 
 function* setLatestClue(action: GameClue.CreateClueComplete) {

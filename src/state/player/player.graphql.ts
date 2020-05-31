@@ -28,7 +28,7 @@ export const savePlayerData = async (client: Apollo.Entity, player: Player.Entit
 };
 
 export const getPlayerData = async (client: Apollo.Entity, userId: string) => {
-  const playerData = await client.query({
+  const playerData = await client.query<{ players_by_pk: Player.Entity }>({
     query: gql`
       query GetPlayer($id: String!) {
         players_by_pk(id: $id) {
@@ -43,7 +43,8 @@ export const getPlayerData = async (client: Apollo.Entity, userId: string) => {
   });
 
   const player = playerData.data.players_by_pk;
+  // @ts-ignore
   delete player.__typename;
 
-  return player as Player.Entity;
+  return player;
 };

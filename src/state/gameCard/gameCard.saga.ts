@@ -8,14 +8,13 @@ import {
   createGameCardsComplete,
   flipGameCardComplete,
   createGameCardsError,
-  unloadGameCards,
 } from './gameCard.actions';
 import { Root } from '../root.types';
 import { getCurrentPlayerColor } from '../player/player.selectors';
 import { Player } from '../player/player.types';
-import { getGameData } from '../game/game.graphql';
 import { Apollo } from '../apollo/apollo.types';
 import { createGameCardsData, flipGameCardState } from './gameCard.graphql';
+import { flipCardRequest } from '../game/game.actions';
 
 const generateCardTypeMap = (whoIsStarting: GameCard.CardType) => {
   const cardTypeMap = [
@@ -49,9 +48,10 @@ function* createGameCards(action: Game.StartGameComplete) {
         state: {
           type: cardTypeMap[i],
           game_id: action.game.id,
+          flipped: false,
         },
       };
-    }) as GameCard.NewEntity[];
+    });
 
     yield call(createGameCardsData, client, gameCards);
     yield put(createGameCardsComplete());
@@ -60,24 +60,27 @@ function* createGameCards(action: Game.StartGameComplete) {
   }
 }
 
-function* unloadCards() {
-  yield put(unloadGameCards());
-}
-
 function* flipGameCard(action: GameCard.FlipGameCardRequest) {
-  const gameId: string = yield select((state: Root.State) => state.game.data.id);
+  const alreadyFlippingCard: boolean = yield select(
+    (state: Root.State) => state.game.flippingCard
+  );
+  if (alreadyFlippingCard || action.card.state.flipped) {
+    return;
+  }
+  yield put(flipCardRequest());
+
   const client: Apollo.Entity = yield select((state: Root.State) => state.apollo.client);
-  const gameData: Game.Entity = yield call(getGameData, client, gameId);
+  const game: Game.Entity = yield select((state: Root.State) => state.game.data);
   const player: Player.Entity = yield select((state: Root.State) => state.player.data);
   const currentPlayerColor: Game.TeamColor = yield select(getCurrentPlayerColor);
-  const currentTurn = gameData.turn;
+  const currentTurn = game.turn;
 
   if (
-    player.id === gameData.blue_spymaster.id || // Spymasters can't flip cards!
-    player.id === gameData.red_spymaster.id || // Spymasters can't flip cards!
+    player.id === (game.blue_spymaster && game.blue_spymaster.id) || // Spymasters can't flip cards!
+    player.id === (game.red_spymaster && game.red_spymaster.id) || // Spymasters can't flip cards!
     currentTurn !== currentPlayerColor || // This isn't your team, man. You can't flip a card!
-    gameData.status === Game.Status.Over || // Game over, man! Game over!
-    gameData.number_of_guesses === -1 // Spymaster has not provided a clue, yet.
+    game.status === Game.Status.Over || // Game over, man! Game over!
+    game.number_of_guesses === -1 // Spymaster has not provided a clue, yet.
   ) {
     return;
   }
@@ -94,14 +97,6 @@ function* flipGameCardListener() {
   yield takeEvery([ GameCard.ActionTypes.FlipGameCardRequest ], flipGameCard);
 }
 
-function* clearCardsListener() {
-  yield takeEvery([ Game.ActionTypes.LeaveGameComplete ], unloadCards);
-}
-
 export function* gameCardSaga() {
-  yield all([
-    fork(createGameCardsListener),
-    fork(flipGameCardListener),
-    fork(clearCardsListener),
-  ]);
+  yield all([ fork(createGameCardsListener), fork(flipGameCardListener) ]);
 }

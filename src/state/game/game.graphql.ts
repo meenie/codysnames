@@ -49,7 +49,7 @@ export const GAME_FIELDS_FRAGMENT = gql`
 `;
 
 export const getGameData = async (client: Apollo.Entity, gameId: string) => {
-  const result = await client.query({
+  const result = await client.query<{ games_by_pk: Game.Entity }>({
     query: gql`
       query GetGame($id: String!) {
         games_by_pk(id: $id) {
@@ -65,6 +65,7 @@ export const getGameData = async (client: Apollo.Entity, gameId: string) => {
   });
 
   const game = result.data.games_by_pk;
+  // @ts-ignore
   delete game.__typename;
 
   if (!game.red_spymaster) {
@@ -75,7 +76,7 @@ export const getGameData = async (client: Apollo.Entity, gameId: string) => {
     game.blue_spymaster = blankPlayer;
   }
 
-  return game as Game.Entity;
+  return game;
 };
 
 export const createGameData = async (client: Apollo.Entity, playerId: string) => {

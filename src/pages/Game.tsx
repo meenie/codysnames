@@ -49,14 +49,15 @@ const GAME_SUB = gql`
 const Game: React.FC<{ gameId: string }> = ({ gameId }) => {
   const classes = useStyles();
   const dispatch = useDispatch();
-  const { data, loading } = useSubscription(GAME_SUB, { variables: { gameId } });
+  const { data, loading } = useSubscription<{ games_by_pk: IGame.Entity }>(GAME_SUB, {
+    variables: { gameId },
+  });
   const game = useSelector((state: Root.State) => state.game.data, isEqual);
 
   useEffect(
     () => {
       if (data && !loading) {
         const game = data.games_by_pk;
-        delete game.__typename;
         dispatch(databasePushUpdate(game));
       }
     },

@@ -1,9 +1,5 @@
 import { GameCard } from './gameCard.types';
 
-export const unloadGameCards = () => ({
-  type: GameCard.ActionTypes.UnloadGameCards,
-});
-
 export const createGameCardsRequest = (): GameCard.CreateGameCardsRequest => ({
   type: GameCard.ActionTypes.CreateGameCardsRequest,
 });
