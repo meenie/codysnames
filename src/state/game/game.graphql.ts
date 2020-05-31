@@ -24,6 +24,9 @@ export const GAME_FIELDS_FRAGMENT = gql`
     turn
     status
     who_won
+    red_has_extra_guess
+    blue_has_extra_guess
+    double_agent
     red_spymaster
     blue_spymaster
     blue_agents {
