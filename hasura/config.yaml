@@ -1,0 +1,3 @@
+version: 2
+endpoint: https://data.codysnames.com
+metadata_directory: metadata
