@@ -1,25 +1,49 @@
-import { all, call, fork, takeEvery, put } from 'redux-saga/effects';
+import { all, call, fork, takeEvery, put, select } from 'redux-saga/effects';
+import { Apollo } from '../apollo/apollo.types';
+import gql from 'graphql-tag';
 
-import { db } from '../../services/firebase';
 import { GameClue } from './gameClue.types';
 import { createGameClueComplete, createGameClueError } from './gameClue.actions';
+import { Root } from '../root.types';
 
-const persistGameClue = async (gameClue: Omit<GameClue.Entity, 'id'>) => {
-  const gameClueRef = db.collection('gameClues').doc();
-
-  await gameClueRef.set({
-    ...gameClue,
-    createdAt: window.firebase.firestore.FieldValue.serverTimestamp(),
+const setGameClue = async (
+  client: Apollo.Entity,
+  gameClue: Omit<GameClue.Entity, 'id'>
+) => {
+  const result = await client.mutate<{ insert_game_clues_one: GameClue.Entity }>({
+    mutation: gql`
+      mutation CreateGameClue($object: game_clues_insert_input!) {
+        insert_game_clues_one(object: $object) {
+          id
+          color
+          clue
+          game_id
+          number_of_guesses
+          updated_at
+          created_at
+        }
+      }
+    `,
+    variables: {
+      object: gameClue,
+    },
   });
-  return {
-    ...gameClue,
-    id: gameClueRef.id,
-  };
+
+  if (result.data) {
+    return result.data.insert_game_clues_one;
+  }
 };
 
 function* createGameClue(action: GameClue.CreateClueRequest) {
   try {
-    const gameClueData: GameClue.Entity = yield call(persistGameClue, action.gameClue);
+    const client: Apollo.Entity = yield select(
+      (state: Root.State) => state.apollo.client
+    );
+    const gameClueData: GameClue.Entity = yield call(
+      setGameClue,
+      client,
+      action.gameClue
+    );
     yield put(createGameClueComplete(gameClueData));
   } catch (e) {
     yield put(createGameClueError(e));

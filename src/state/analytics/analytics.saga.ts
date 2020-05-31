@@ -45,7 +45,7 @@ function endedTurn() {
 function gameStateUpdated(action: Game.GameStateUpdated) {
   if (action.game.status === Game.Status.Over) {
     analytics.logEvent('Game Over', {
-      whoWon: action.game.whoWon,
+      whoWon: action.game.who_won,
     });
   }
 }

@@ -60,7 +60,7 @@ const GameStart: React.FC = () => {
             onChange={(ev) => setGameId(ev.target.value)}
             onKeyPress={(ev) => {
               if (ev.key === 'Enter' && gameId && gameId.length === 4) {
-                dispatch(joinGameRequest(gameId.toLowerCase()));
+                dispatch(joinGameRequest(gameId.toUpperCase()));
                 ev.preventDefault();
               }
             }}

@@ -7,39 +7,38 @@ export namespace GameCard {
     loading: boolean;
     error: boolean;
     errors: Error[];
-    data: Entity;
+    data: Entity[];
   }
 
   export interface Entity {
-    cards: GameCardEntity[];
-    cardStates: GameCardStateEntity[];
-  }
-
-  export interface GameCardEntity {
     id: string;
-    gameId: string;
+    game_id: string;
+    game_card_state_id: string;
     name: string;
     order: number;
+    state: GameCardStateEntity;
+  }
+
+  export interface NewEntity extends Omit<Entity, 'id' | 'state'> {
+    state: NewGameCardStateEntity;
   }
 
   export interface GameCardStateEntity {
     id: string;
     flipped: boolean;
-    whoFlippedIt?: Player.Entity;
-    gameId: string;
+    who_flipped_it?: Player.Entity;
+    game_id: string;
     type: CardType;
   }
 
-  export interface GameCardEntityWithStateEntity extends GameCardEntity {
-    state: GameCardStateEntity;
-  }
+  export type NewGameCardStateEntity = Omit<GameCardStateEntity, 'id'>;
 
   export enum CardType {
-    BlueTeam = 'BLUE_TEAM',
-    RedTeam = 'RED_TEAM',
-    Bystander = 'BYSTANDER',
-    Assassin = 'ASSASSIN',
-    Unkown = 'UNKNOWN',
+    BlueTeam = 'blue',
+    RedTeam = 'red',
+    Bystander = 'bystander',
+    Assassin = 'assassin',
+    Unkown = 'unkown',
   }
 
   export enum ActionTypes {
@@ -56,7 +55,7 @@ export namespace GameCard {
 
   export interface DatabasePushGameCardUpdate extends Action {
     type: ActionTypes.DatabasePushGameCardUpdate;
-    gameCards: GameCardEntity[];
+    gameCards: Entity[];
   }
 
   export interface DatabasePushGameCardStateUpdate extends Action {
@@ -83,12 +82,12 @@ export namespace GameCard {
 
   export interface FlipGameCardRequest extends Action {
     type: ActionTypes.FlipGameCardRequest;
-    cardState: GameCard.GameCardStateEntity;
+    card: GameCard.Entity;
   }
 
   export interface FlipGameCardComplete extends Action {
     type: ActionTypes.FlipGameCardComplete;
-    gameCardId: string;
+    cardId: string;
   }
 
   export interface FlipGameCardError extends Action {

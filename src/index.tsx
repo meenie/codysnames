@@ -4,7 +4,7 @@ import CssBaseLine from '@material-ui/core/CssBaseline';
 import { ThemeProvider } from '@material-ui/core/styles';
 import { applyMiddleware, createStore } from 'redux';
 import createSagaMiddleware from 'redux-saga';
-import { Provider } from 'react-redux';
+import { Provider as ReduxProvider } from 'react-redux';
 import { composeWithDevTools } from 'redux-devtools-extension';
 
 import theme from './theme';
@@ -27,12 +27,12 @@ const store = createStore(
 sagaMiddleware.run(rootSaga);
 
 ReactDOM.render(
-  <Provider store={store}>
+  <ReduxProvider store={store}>
     <ThemeProvider theme={theme}>
       <CssBaseLine />
       <App />
     </ThemeProvider>
-  </Provider>,
+  </ReduxProvider>,
   document.getElementById('root')
 );
 

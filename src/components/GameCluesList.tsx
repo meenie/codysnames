@@ -15,6 +15,9 @@ import { Root } from '../state/root.types';
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {},
+    headerText: {
+      textTransform: 'capitalize',
+    },
   })
 );
 
@@ -37,7 +40,7 @@ const GameCluesList: React.FC<{
 }> = ({ teamColor }) => {
   const classes = useStyles();
   const gameClues = useSelector((state: Root.State) =>
-    state.gameClues.data.filter((clue) => clue.teamColor === teamColor)
+    state.game.data.clues.filter((clue) => clue.color === teamColor)
   );
 
   return (
@@ -45,13 +48,15 @@ const GameCluesList: React.FC<{
       className={classes.root}
       subheader={
         <ListSubheader>
-          <Typography variant="h5">{teamColor} Clues</Typography>
+          <Typography variant="h5" className={classes.headerText}>
+            {teamColor} Clues
+          </Typography>
         </ListSubheader>
       }>
       {gameClues.map((clue) => (
         <ListItem key={clue.id}>
           <ListItemText
-            primary={`${clue.clue}: ${getNumberOfGuessesText(clue.numberOfGuesses)}`}
+            primary={`${clue.clue}: ${getNumberOfGuessesText(clue.number_of_guesses)}`}
           />
         </ListItem>
       ))}

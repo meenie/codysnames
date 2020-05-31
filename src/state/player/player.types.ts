@@ -12,7 +12,7 @@ export namespace Player {
   export interface Entity {
     id: string;
     name: string;
-    currentGameId?: string;
+    current_game_id?: string;
   }
 
   export enum ActionTypes {

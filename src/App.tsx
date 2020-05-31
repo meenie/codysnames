@@ -2,6 +2,7 @@ import React, { useEffect, memo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Box, Typography, CircularProgress, Container, Fade } from '@material-ui/core';
 import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
+import { ApolloProvider } from '@apollo/react-hooks';
 
 import { signInPlayerRequest } from './state/player/player.actions';
 import Home from './pages/Home';
@@ -34,6 +35,7 @@ const App: React.FC = () => {
   const gameLoaded = useSelector((state: Root.State) => state.game.loaded);
   const gameLoading = useSelector((state: Root.State) => state.game.loading);
   const gameId = useSelector((state: Root.State) => state.game.data.id);
+  const client = useSelector((state: Root.State) => state.apollo.client);
 
   useEffect(
     () => {
@@ -48,14 +50,17 @@ const App: React.FC = () => {
         <CircularProgress className={classes.loading} />
       </Fade>
       {isLoggedIn &&
-      !gameLoading && (
-        <Container className={classes.root}>
-          <Typography variant="h1" className={classes.title}>
-            CODYSNAMES
-          </Typography>
-          {gameLoaded && <Game gameId={gameId} />}
-          {!gameLoaded && <Home />}
-        </Container>
+      !gameLoading &&
+      client && (
+        <ApolloProvider client={client}>
+          <Container className={classes.root}>
+            <Typography variant="h1" className={classes.title}>
+              CODYSNAMES
+            </Typography>
+            {gameLoaded && <Game gameId={gameId} />}
+            {!gameLoaded && <Home />}
+          </Container>
+        </ApolloProvider>
       )}
     </Box>
   );
