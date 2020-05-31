@@ -1,0 +1,504 @@
+{
+  "version": 2,
+  "tables": [
+    {
+      "table": {
+        "schema": "public",
+        "name": "card_types"
+      },
+      "is_enum": true
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "game_card_states"
+      },
+      "object_relationships": [
+        {
+          "name": "game",
+          "using": {
+            "foreign_key_constraint_on": "game_id"
+          }
+        }
+      ],
+      "insert_permissions": [
+        {
+          "role": "user",
+          "permission": {
+            "check": {},
+            "columns": [ "game_id", "type" ],
+            "backend_only": false
+          }
+        }
+      ],
+      "select_permissions": [
+        {
+          "role": "user",
+          "permission": {
+            "columns": [
+              "id",
+              "created_at",
+              "updated_at",
+              "game_id",
+              "flipped",
+              "type",
+              "who_flipped_it"
+            ],
+            "filter": {
+              "_or": [
+                {
+                  "flipped": {
+                    "_eq": true
+                  }
+                },
+                {
+                  "game": {
+                    "games_players": {
+                      "_and": [
+                        {
+                          "player_id": {
+                            "_eq": "X-Hasura-User-Id"
+                          }
+                        },
+                        {
+                          "is_spymaster": {
+                            "_eq": true
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "game": {
+                    "_and": [
+                      {
+                        "status": {
+                          "_eq": "over"
+                        }
+                      },
+                      {
+                        "games_players": {
+                          "player_id": {
+                            "_eq": "X-Hasura-User-Id"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "update_permissions": [
+        {
+          "role": "user",
+          "permission": {
+            "columns": [ "flipped" ],
+            "filter": {
+              "game": {
+                "games_players": {
+                  "_and": [
+                    {
+                      "player_id": {
+                        "_eq": "X-Hasura-User-Id"
+                      }
+                    },
+                    {
+                      "is_spymaster": {
+                        "_eq": false
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "check": null,
+            "set": {
+              "who_flipped_it": "x-hasura-User-Id"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "game_cards"
+      },
+      "object_relationships": [
+        {
+          "name": "state",
+          "using": {
+            "foreign_key_constraint_on": "game_card_state_id"
+          }
+        }
+      ],
+      "insert_permissions": [
+        {
+          "role": "user",
+          "permission": {
+            "check": {},
+            "columns": [ "game_id", "name", "order" ],
+            "backend_only": false
+          }
+        }
+      ],
+      "select_permissions": [
+        {
+          "role": "user",
+          "permission": {
+            "columns": [
+              "created_at",
+              "game_card_state_id",
+              "game_id",
+              "id",
+              "name",
+              "order",
+              "updated_at"
+            ],
+            "filter": {}
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "game_clues"
+      },
+      "object_relationships": [
+        {
+          "name": "game",
+          "using": {
+            "foreign_key_constraint_on": "game_id"
+          }
+        }
+      ],
+      "insert_permissions": [
+        {
+          "role": "user",
+          "permission": {
+            "check": {
+              "game": {
+                "games_players": {
+                  "_and": [
+                    {
+                      "player_id": {
+                        "_eq": "X-Hasura-User-Id"
+                      }
+                    },
+                    {
+                      "is_spymaster": {
+                        "_eq": true
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "columns": [ "clue", "color", "game_id", "number_of_guesses" ],
+            "backend_only": false
+          }
+        }
+      ],
+      "select_permissions": [
+        {
+          "role": "user",
+          "permission": {
+            "columns": [
+              "number_of_guesses",
+              "clue",
+              "color",
+              "game_id",
+              "created_at",
+              "updated_at",
+              "id"
+            ],
+            "filter": {
+              "game": {
+                "status": {
+                  "_eq": "over"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "game_statuses"
+      },
+      "is_enum": true
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "games"
+      },
+      "array_relationships": [
+        {
+          "name": "cards",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "game_id",
+              "table": {
+                "schema": "public",
+                "name": "game_cards"
+              }
+            }
+          }
+        },
+        {
+          "name": "clues",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "game_id",
+              "table": {
+                "schema": "public",
+                "name": "game_clues"
+              }
+            }
+          }
+        },
+        {
+          "name": "games_players",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "game_id",
+              "table": {
+                "schema": "public",
+                "name": "games_players"
+              }
+            }
+          }
+        }
+      ],
+      "computed_fields": [
+        {
+          "name": "blue_agents",
+          "definition": {
+            "function": {
+              "schema": "public",
+              "name": "game_blue_agents"
+            },
+            "table_argument": null
+          },
+          "comment": ""
+        },
+        {
+          "name": "red_agents",
+          "definition": {
+            "function": {
+              "schema": "public",
+              "name": "game_red_agents"
+            },
+            "table_argument": null
+          },
+          "comment": ""
+        },
+        {
+          "name": "blue_spymaster",
+          "definition": {
+            "function": {
+              "schema": "public",
+              "name": "game_blue_spymaster"
+            },
+            "table_argument": null
+          },
+          "comment": ""
+        },
+        {
+          "name": "red_spymaster",
+          "definition": {
+            "function": {
+              "schema": "public",
+              "name": "game_red_spymaster"
+            },
+            "table_argument": null
+          },
+          "comment": ""
+        }
+      ],
+      "insert_permissions": [
+        {
+          "role": "user",
+          "permission": {
+            "check": {},
+            "columns": [],
+            "backend_only": false
+          }
+        }
+      ],
+      "select_permissions": [
+        {
+          "role": "user",
+          "permission": {
+            "columns": [
+              "blue_has_extra_guess",
+              "clue",
+              "created_at",
+              "double_agent",
+              "id",
+              "number_of_guesses",
+              "red_has_extra_guess",
+              "status",
+              "turn",
+              "updated_at",
+              "who_won"
+            ],
+            "computed_fields": [ "blue_spymaster", "red_spymaster" ],
+            "filter": {}
+          }
+        }
+      ],
+      "update_permissions": [
+        {
+          "role": "user",
+          "permission": {
+            "columns": [
+              "blue_has_extra_guess",
+              "clue",
+              "double_agent",
+              "id",
+              "number_of_guesses",
+              "red_has_extra_guess",
+              "status",
+              "turn",
+              "who_won"
+            ],
+            "filter": {},
+            "check": null
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "games_players"
+      },
+      "object_relationships": [
+        {
+          "name": "game",
+          "using": {
+            "foreign_key_constraint_on": "game_id"
+          }
+        },
+        {
+          "name": "player",
+          "using": {
+            "foreign_key_constraint_on": "player_id"
+          }
+        },
+        {
+          "name": "player_color",
+          "using": {
+            "foreign_key_constraint_on": "color"
+          }
+        }
+      ],
+      "insert_permissions": [
+        {
+          "role": "user",
+          "permission": {
+            "check": {},
+            "columns": [ "is_spymaster", "color", "game_id", "player_id" ],
+            "backend_only": false
+          }
+        }
+      ],
+      "select_permissions": [
+        {
+          "role": "user",
+          "permission": {
+            "columns": [ "color", "game_id", "is_spymaster", "player_id" ],
+            "filter": {}
+          }
+        }
+      ],
+      "update_permissions": [
+        {
+          "role": "user",
+          "permission": {
+            "columns": [ "game_id", "player_id", "color", "is_spymaster" ],
+            "filter": {},
+            "check": null
+          }
+        }
+      ],
+      "delete_permissions": [
+        {
+          "role": "user",
+          "permission": {
+            "filter": {}
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "player_colors"
+      },
+      "is_enum": true
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "players"
+      },
+      "array_relationships": [
+        {
+          "name": "games_players",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "player_id",
+              "table": {
+                "schema": "public",
+                "name": "games_players"
+              }
+            }
+          }
+        }
+      ],
+      "insert_permissions": [
+        {
+          "role": "user",
+          "permission": {
+            "check": {},
+            "columns": [ "id", "name" ],
+            "backend_only": false
+          }
+        }
+      ],
+      "select_permissions": [
+        {
+          "role": "user",
+          "permission": {
+            "columns": [ "current_game_id", "id", "name" ],
+            "filter": {}
+          }
+        }
+      ],
+      "update_permissions": [
+        {
+          "role": "user",
+          "permission": {
+            "columns": [ "current_game_id", "id", "name" ],
+            "filter": {
+              "id": {
+                "_eq": "X-Hasura-User-Id"
+              }
+            },
+            "check": null
+          }
+        }
+      ]
+    }
+  ]
+}

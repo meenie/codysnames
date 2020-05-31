@@ -140,10 +140,10 @@ export const getGameData = async (client: Apollo.Entity, gameId: string) => {
 const createGameData = async (client: Apollo.Entity, playerId: string) => {
   const result = await client.mutate<{ insert_games_one: Game.Entity }>({
     mutation: gql`
-      mutation CreateGame($player_id: String) {
+      mutation CreateGame($player_id: String, $color: player_colors_enum) {
         insert_games_one(object: {games_players: {data: {
-          color: ${Game.TeamColor.Blue},
-          is_spymaster: true,
+          color: $color
+          is_spymaster: true
           player_id: $player_id
         }}}) {
           ...game_fields
@@ -153,6 +153,7 @@ const createGameData = async (client: Apollo.Entity, playerId: string) => {
     `,
     variables: {
       player_id: playerId,
+      color: Game.TeamColor.Blue,
     },
   });
 
