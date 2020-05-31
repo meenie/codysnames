@@ -15,6 +15,7 @@ export namespace Game {
     started: boolean;
     joining: boolean;
     joined: boolean;
+    flippingCard: boolean;
     error: boolean;
     errors: Error[];
     data: Entity;
@@ -90,6 +91,8 @@ export namespace Game {
     EndTurnComplete = 'Game: Successfully ended turn',
     EndTurnError = 'Game: Error reported from ending turn',
     GameStateUpdated = 'Game: State of game updated',
+    FlipCardRequest = 'Game: Request to flip card',
+    FlipCardComplete = 'Game: Successfully flipped card',
   }
 
   export interface DatabasePushUpdate extends Action {
@@ -217,6 +220,14 @@ export namespace Game {
     game: Entity;
   }
 
+  export interface FlipCardRequest extends Action {
+    type: ActionTypes.FlipCardRequest;
+  }
+
+  export interface FlipCardComplete extends Action {
+    type: ActionTypes.FlipCardComplete;
+  }
+
   export type Actions =
     | DatabasePushUpdate
     | CreateGameRequest
@@ -243,5 +254,7 @@ export namespace Game {
     | EndTurnRequest
     | EndTurnComplete
     | EndTurnError
-    | GameStateUpdated;
+    | GameStateUpdated
+    | FlipCardRequest
+    | FlipCardComplete;
 }

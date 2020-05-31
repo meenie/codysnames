@@ -130,3 +130,11 @@ export const gameStateUpdated = (game: Game.Entity): Game.GameStateUpdated => ({
   type: Game.ActionTypes.GameStateUpdated,
   game,
 });
+
+export const flipCardRequest = (): Game.FlipCardRequest => ({
+  type: Game.ActionTypes.FlipCardRequest,
+});
+
+export const flipCardComplete = (): Game.FlipCardComplete => ({
+  type: Game.ActionTypes.FlipCardComplete,
+});

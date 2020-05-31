@@ -1,10 +1,5 @@
 import { GameClue } from './gameClue.types';
 
-export const databasePushUpdate = (gameClues: GameClue.Entity[]) => ({
-  type: GameClue.ActionTypes.DatabasePushUpdate,
-  gameClues,
-});
-
 export const createGameClueRequest = (
   gameClue: Omit<GameClue.Entity, 'id'>
 ): GameClue.CreateClueRequest => ({
