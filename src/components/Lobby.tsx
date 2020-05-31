@@ -32,9 +32,10 @@ const Lobby: React.FC = () => {
   const classes = useStyles();
   const dispatch = useDispatch();
   const gameStarting = useSelector((state: Root.State) => state.game.starting);
-  const { redSpymaster, blueSpymaster, redAgents, blueAgents, id } = useSelector(
+  const { red_spymaster, blue_spymaster, red_agents, blue_agents, id } = useSelector(
     (state: Root.State) => state.game.data
   );
+
   const playerType = useSelector(getCurrentPlayerType);
   const playerColor = useSelector(getCurrentPlayerColor);
   const isBlueSpymaster =
@@ -49,7 +50,10 @@ const Lobby: React.FC = () => {
   };
 
   const canStartGame =
-    !!blueSpymaster && !!redSpymaster && blueAgents.length > 0 && redAgents.length > 0;
+    !!blue_spymaster &&
+    !!red_spymaster &&
+    blue_agents.length > 0 &&
+    red_agents.length > 0;
 
   return (
     <Box className={classes.root}>
@@ -78,8 +82,8 @@ const Lobby: React.FC = () => {
           <Paper>
             <PlayerList
               teamColor="blue"
-              agents={blueAgents}
-              spymaster={blueSpymaster}
+              agents={blue_agents}
+              spymaster={blue_spymaster}
               teamName="Blue Team"
               showJoinTeamButton={
                 playerType === Game.PlayerType.Agent &&
@@ -98,8 +102,8 @@ const Lobby: React.FC = () => {
           <Paper>
             <PlayerList
               teamColor="red"
-              agents={redAgents}
-              spymaster={redSpymaster}
+              agents={red_agents}
+              spymaster={red_spymaster}
               teamName="Red Team"
               showJoinTeamButton={
                 playerType === Game.PlayerType.Agent && playerColor !== Game.TeamColor.Red

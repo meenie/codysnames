@@ -15,24 +15,36 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: '10.16'
-      - name: Cache node modules
+      - name: Cache hosting node modules
         uses: actions/cache@v1
         env:
-          cache-name: cache-node-modules
+          cache-name: cache-hosting-node-modules
         with:
           path: ./node_modules
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('yarn.lock') }}
+      - name: Cache functions node modules
+        uses: actions/cache@v1
+        env:
+          cache-name: cache-functions-node-modules
+        with:
+          path: ./functions/node_modules
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('functions/yarn.lock') }}
       - name: Install Dependencies
-        run: yarn --frozen-lockfile
+        run: yarn --frozen-lockfile && yarn --cwd ./functions --frozen-lockfile
       - name: Build
         run: yarn build
-      - name: Archive Production Artifact
+      - name: Archive Hosting Production Artifact
         uses: actions/upload-artifact@master
         with:
-          name: build
+          name: hosting_files
           path: build
-  deploy:
-    name: Deploy
+      - name: Archive Functions Production Artifact
+        uses: actions/upload-artifact@master
+        with:
+          name: functions_files
+          path: functions/lib
+  deploy_functions:
+    name: Deploy Functions
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -41,7 +53,25 @@ jobs:
       - name: Download Artifact
         uses: actions/download-artifact@master
         with:
-          name: build
+          name: functions_files
+          path: functions/lib
+      - name: Deploy to Firebase
+        uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only functions
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+  deploy_hosting:
+    name: Deploy Hosting
+    needs: [build, deploy_functions]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@master
+      - name: Download Artifact
+        uses: actions/download-artifact@master
+        with:
+          name: hosting_files
           path: build
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master

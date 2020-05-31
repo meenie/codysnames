@@ -6,23 +6,13 @@ import isEqual from 'lodash/isEqual';
 import { useDispatch, useSelector } from 'react-redux';
 import { Skeleton } from '@material-ui/lab';
 
-import { useCollection } from '../hooks/useCollection';
-import { db } from '../services/firebase';
 import { Root } from '../state/root.types';
 import { Game } from '../state/game/game.types';
-import { GameCard as IGameCard } from '../state/gameCard/gameCard.types';
-import { GameClue as IGameClue } from '../state/gameClue/gameClue.types';
 import { endTurnRequest, switchTeamsRequest } from '../state/game/game.actions';
-import { databasePushUpdate as databasePushGameClueUpdate } from '../state/gameClue/gameClue.actions';
-import {
-  databasePushGameCardUpdate,
-  databasePushGameCardStateUpdate,
-} from '../state/gameCard/gameCard.actions';
 import {
   getCurrentPlayerType,
   getCurrentPlayerColor,
 } from '../state/player/player.selectors';
-import { getGameCardsWithState } from '../state/gameCard/gameCard.selectors';
 import GameCard from './GameCard';
 import PlayerList from './PlayerList';
 import GameClue from './GameClue';
@@ -87,14 +77,15 @@ const useStyles = makeStyles((theme: Theme) =>
 const GameBoard: React.FC = () => {
   const classes = useStyles();
   const dispatch = useDispatch();
-  const cards = useSelector(getGameCardsWithState, isEqual);
   const game = useSelector((state: Root.State) => state.game.data, isEqual);
   const currentPlayerType = useSelector(getCurrentPlayerType);
   const currentPlayerColor = useSelector(getCurrentPlayerColor);
-  const leavingGame = useSelector((state: Root.State) => state.game.leaving);
-  const { redSpymaster, blueSpymaster, redAgents, blueAgents } = useSelector(
-    (state: Root.State) => state.game.data
-  );
+  const {
+    red_spymaster: redSpymaster,
+    blue_spymaster: blueSpymaster,
+    red_agents: redAgents,
+    blue_agents: blueAgents,
+  } = useSelector((state: Root.State) => state.game.data);
   const playerType = useSelector(getCurrentPlayerType);
   const playerColor = useSelector(getCurrentPlayerColor);
   const [ dialogOpen, setDialogOpen ] = useState(false);
@@ -103,7 +94,7 @@ const GameBoard: React.FC = () => {
     dispatch(switchTeamsRequest());
   };
 
-  const whoWon = game.whoWon;
+  const whoWon = game.who_won && game.who_won.toUpperCase();
   const whosTurn = game.turn;
   const bluesTurn = whosTurn === Game.TeamColor.Blue;
   const redsTurn = whosTurn === Game.TeamColor.Red;
@@ -111,7 +102,7 @@ const GameBoard: React.FC = () => {
   const yourTurn =
     currentPlayerColor === whosTurn && gameStatus === Game.Status.InSession;
   const clue = game.clue;
-  const noOfGuesses = game.numberOfGuesses || -1;
+  const noOfGuesses = game.number_of_guesses || -1;
   const isSpymaster = currentPlayerType === Game.PlayerType.Spymaster;
   let noOfGuessesText: string;
   if (noOfGuesses === 10) {
@@ -122,7 +113,10 @@ const GameBoard: React.FC = () => {
     noOfGuessesText = '...';
   } else {
     noOfGuessesText = noOfGuesses.toString();
-    if ((game.blueHasExtraGuess && bluesTurn) || (game.redHasExtraGuess && redsTurn)) {
+    if (
+      (game.blue_has_extra_guess && bluesTurn) ||
+      (game.red_has_extra_guess && redsTurn)
+    ) {
       noOfGuessesText = noOfGuessesText.concat('+1');
     }
   }
@@ -131,50 +125,6 @@ const GameBoard: React.FC = () => {
     [classes.redsTurn]: redsTurn,
     [classes.bluesTurn]: bluesTurn,
   });
-
-  useCollection<IGameCard.GameCardEntity>(
-    () =>
-      db.collection('gameCards').where('gameId', '==', game.id).orderBy('order', 'asc'),
-    {
-      data: (gameCards) =>
-        !leavingGame && dispatch(databasePushGameCardUpdate(gameCards)),
-    },
-    [ game.id ]
-  );
-
-  useCollection<IGameClue.Entity>(
-    () =>
-      db
-        .collection('gameClues')
-        .where('gameId', '==', game.id)
-        .orderBy('createdAt', 'asc'),
-    {
-      data: (gameClues) => dispatch(databasePushGameClueUpdate(gameClues)),
-      error: (error) => console.error(error),
-      shouldConnect: game.status === Game.Status.Over,
-    },
-    [ game.id, game.status ]
-  );
-
-  useCollection<IGameCard.GameCardStateEntity>(
-    () => {
-      const query = db.collection('gameCardState').where('gameId', '==', game.id);
-
-      if (
-        currentPlayerType === Game.PlayerType.Agent &&
-        game.status !== Game.Status.Over
-      ) {
-        return query.where('flipped', '==', true);
-      }
-
-      return query;
-    },
-    {
-      data: (gameCardState) =>
-        !leavingGame && dispatch(databasePushGameCardStateUpdate(gameCardState)),
-    },
-    [ game.id, currentPlayerType, game.status ]
-  );
 
   return (
     <Box className={classes.root}>
@@ -273,7 +223,7 @@ const GameBoard: React.FC = () => {
         </Grid>
         <Grid item xs={8}>
           <Grid container spacing={2} justify="center">
-            {cards.length === 0 &&
+            {game.cards.length === 0 &&
               Array(25).fill(null).map((_, i) => (
                 <Grid key={`skeleton-${i}`} item>
                   <Skeleton
@@ -285,7 +235,7 @@ const GameBoard: React.FC = () => {
                   />
                 </Grid>
               ))}
-            {cards.map((card) => (
+            {game.cards.map((card) => (
               <Grid key={card.id} item>
                 <GameCard card={card} />
               </Grid>

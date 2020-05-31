@@ -1,3 +1,6 @@
+// eslint-disable-next-line
+import firebase from 'firebase';
+
 export const auth = window.firebase.auth();
-export const db = window.firebase.firestore();
+export const database = window.firebase.database();
 export const analytics = window.firebase.analytics();

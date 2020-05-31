@@ -3,8 +3,12 @@ It's like Codenames, but it's Codysnames.
 
 ## Tools used
 1. [Create React App](https://github.com/facebook/create-react-app)
-1. [Firebase](https://firebase.google.com)
+1. [Hasura](https://hasura.io)
+1. [GraphQL](https://www.graphql.com/)
+1. [Apollo](https://www.apollographql.com/)
+1. [TypeScript](https://www.typescriptlang.org/)
 1. [Material UI](https://material-ui.com)
+1. [Firebase Authentication](https://firebase.google.com/products/auth)
 
 ## Available Scripts
 
@@ -19,10 +23,6 @@ The page will reload if you make edits.<br />
 You will also see any lint errors in the console.
 
 It will also start a Firebase dev server on http://localhost:4000 which will serve up the [dynamic reserved URLs](https://firebase.google.com/docs/web/setup#from-hosting-urls) to auto initialize the app locally and in production.
-
-### `yarn deploy`
-
-Runs the `firebase deploy --only hosting` command which has a pre-deploy hook that runs `yarn build` and pushes those files up to Firebase.
 
 ### `yarn test`
 

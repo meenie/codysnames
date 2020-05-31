@@ -59,14 +59,12 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 );
 
-const GameCard: React.FC<{ card: IGameCard.GameCardEntityWithStateEntity }> = ({
-  card,
-}) => {
+const GameCard: React.FC<{ card: IGameCard.Entity }> = ({ card }) => {
   const currentPlayerType = useSelector((state: Root.State) => {
     const userId = state.player.data.id;
     if (
-      state.game.data.blueSpymaster.id === userId ||
-      state.game.data.redSpymaster.id === userId
+      state.game.data.blue_spymaster.id === userId ||
+      state.game.data.red_spymaster.id === userId
     ) {
       return Game.PlayerType.Spymaster;
     }
@@ -99,9 +97,7 @@ const GameCard: React.FC<{ card: IGameCard.GameCardEntityWithStateEntity }> = ({
     [classes.fontSizeLg]: card.name.length < 8,
   });
   return (
-    <Paper
-      className={paperClasses}
-      onClick={() => dispatch(flipGameCardRequest(card.state))}>
+    <Paper className={paperClasses} onClick={() => dispatch(flipGameCardRequest(card))}>
       {(!card.state.flipped || gameOver) && card.name}
     </Paper>
   );

@@ -12,10 +12,10 @@ export namespace GameClue {
 
   export interface Entity {
     id: string;
-    gameId: string;
+    game_id: string;
     clue: string;
-    numberOfGuesses: number;
-    teamColor: Game.TeamColor;
+    number_of_guesses: number;
+    color: Game.TeamColor;
   }
 
   export enum ActionTypes {

@@ -50,9 +50,9 @@ const GameClue: React.FC<{
       dispatch(
         createGameClueRequest({
           clue,
-          numberOfGuesses,
-          teamColor: game.turn,
-          gameId: game.id,
+          number_of_guesses: numberOfGuesses,
+          color: game.turn,
+          game_id: game.id,
         })
       );
       setClue('');

@@ -1,17 +1,18 @@
-import React, { memo } from 'react';
+import React, { memo, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Box } from '@material-ui/core';
 import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
 import isEqual from 'lodash/isEqual';
+import gql from 'graphql-tag';
+import { useSubscription } from '@apollo/react-hooks';
 
-import { useDoc } from '../hooks/useDoc';
-import { db } from '../services/firebase';
 import { databasePushUpdate } from '../state/game/game.actions';
 import { Root } from '../state/root.types';
 import { Game as IGame } from '../state/game/game.types';
 import GameBoard from '../components/GameBoard';
 import Lobby from '../components/Lobby';
 import GameInfo from '../components/GameInfo';
+import { GAME_FIELDS_FRAGMENT } from '../state/game/game.graphql';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -36,18 +37,30 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 );
 
+const GAME_SUB = gql`
+  subscription GameSubscription($gameId: String!) {
+    games_by_pk(id: $gameId) {
+      ...game_fields
+    }
+  }
+  ${GAME_FIELDS_FRAGMENT}
+`;
+
 const Game: React.FC<{ gameId: string }> = ({ gameId }) => {
   const classes = useStyles();
   const dispatch = useDispatch();
-
+  const { data, loading } = useSubscription(GAME_SUB, { variables: { gameId } });
   const game = useSelector((state: Root.State) => state.game.data, isEqual);
 
-  useDoc<IGame.Entity>(
-    () => db.collection('games').doc(gameId),
-    {
-      data: (game) => game && dispatch(databasePushUpdate(game)),
+  useEffect(
+    () => {
+      if (data && !loading) {
+        const game = data.games_by_pk;
+        delete game.__typename;
+        dispatch(databasePushUpdate(game));
+      }
     },
-    [ gameId ]
+    [ data, loading, dispatch ]
   );
 
   return (

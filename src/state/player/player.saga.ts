@@ -1,6 +1,6 @@
-import { all, call, fork, takeEvery, put, select } from 'redux-saga/effects';
+import { all, call, fork, takeEvery, put, select, delay } from 'redux-saga/effects';
 
-import { db, auth } from '../../services/firebase';
+import { database, auth } from '../../services/firebase';
 import { Player } from './player.types';
 import { Root } from '../root.types';
 import {
@@ -13,40 +13,46 @@ import {
 } from './player.actions';
 import { Game } from '../game/game.types';
 import produce from 'immer';
+import { Apollo } from '../apollo/apollo.types';
+import { setClient } from '../apollo/apollo.actions';
+import { makeApolloClient } from '../../services/apollo';
+import { savePlayerData, getPlayerData } from './player.graphql';
 
-const signInAnonymously = async () => {
-  const credential = await auth.signInAnonymously();
-
-  return credential.user && credential.user.uid;
-};
-
-const savePlayerData = async (player: Player.Entity) => {
-  const playerRef = db.collection('players').doc(player.id);
-
-  return playerRef.update(player);
-};
-
-const getPlayerData = async (userId: string) => {
-  const playerRef = db.collection('players').doc(userId);
-  const playerSnapshot = await playerRef.get();
-  let playerData = playerSnapshot.data() as Player.Entity;
-
-  if (!playerData) {
-    playerData = {
-      id: userId,
-      name: '',
-      currentGameId: '',
-    };
-
-    await playerRef.set(playerData);
-  }
-
-  return playerData;
+const signInAnonymously = () => {
+  return new Promise((resolve) => {
+    auth.signInAnonymously();
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        const token = await user.getIdToken(true);
+        const idTokenResult = await user.getIdTokenResult();
+        const hasuraClaim = idTokenResult.claims['https://hasura.io/jwt/claims'];
+        if (hasuraClaim) {
+          resolve({
+            token,
+            userId: user.uid,
+          });
+        } else {
+          const metadataRef = database.ref('metadata/' + user.uid + '/refreshTime');
+          metadataRef.on('value', async (data) => {
+            if (!data.val()) return;
+            const token = await user.getIdToken(true);
+            resolve({
+              token,
+              userId: user.uid,
+            });
+          });
+        }
+      }
+    });
+  });
 };
 
 function* setPlayerData(action: Player.SetPlayerDataRequest) {
   try {
-    yield call(savePlayerData, action.player);
+    const client: Apollo.Entity = yield select(
+      (state: Root.State) => state.apollo.client
+    );
+    yield call(savePlayerData, client, action.player);
     yield put(setPlayerDataComplete(action.player));
   } catch (e) {
     yield put(setPlayerDataError(e));
@@ -55,11 +61,25 @@ function* setPlayerData(action: Player.SetPlayerDataRequest) {
 
 function* signInPlayer() {
   try {
-    const userId = yield call(signInAnonymously);
-    const player: Player.Entity = yield call(getPlayerData, userId);
+    const { token, userId } = yield call(signInAnonymously);
+
+    const client = makeApolloClient(token);
+    yield put(setClient(client));
+
+    const player: Player.Entity = yield call(getPlayerData, client, userId);
     yield put(signInPlayerComplete(player));
   } catch (error) {
     yield put(signInPlayerError(error));
+  }
+}
+
+function* keepPlayerTokenAlive() {
+  while (true) {
+    yield delay(1e3 * 60 * 5); // 5 mins
+
+    const { token } = yield call(signInAnonymously);
+    const client = makeApolloClient(token);
+    yield put(setClient(client));
   }
 }
 
@@ -67,9 +87,12 @@ function* joinGame(action: Player.JoinGameRequest) {
   try {
     const player: Player.Entity = yield select((state: Root.State) => state.player.data);
     const newPlayerData = produce(player, (draft) => {
-      draft.currentGameId = action.gameId;
+      draft.current_game_id = action.gameId;
     });
-    yield call(savePlayerData, newPlayerData);
+    const client: Apollo.Entity = yield select(
+      (state: Root.State) => state.apollo.client
+    );
+    yield call(savePlayerData, client, newPlayerData);
     yield put(joinGameComplete(newPlayerData));
   } catch (e) {
     yield put(joinGameError(e));
@@ -79,18 +102,20 @@ function* joinGame(action: Player.JoinGameRequest) {
 function* gameCreated(action: Game.CreateGameComplete) {
   const player: Player.Entity = yield select((state: Root.State) => state.player.data);
   const newPlayerData = produce(player, (draft) => {
-    draft.currentGameId = action.game.id;
+    draft.current_game_id = action.game.id;
   });
-  yield call(savePlayerData, newPlayerData);
+  const client: Apollo.Entity = yield select((state: Root.State) => state.apollo.client);
+  yield call(savePlayerData, client, newPlayerData);
   yield put(setPlayerDataComplete(newPlayerData));
 }
 
 function* unsetCurrentGameId(action: Game.LeaveGameComplete) {
   const player: Player.Entity = yield select((state: Root.State) => state.player.data);
   const newPlayerData = produce(player, (draft) => {
-    draft.currentGameId = '';
+    draft.current_game_id = '';
   });
-  yield call(savePlayerData, newPlayerData);
+  const client: Apollo.Entity = yield select((state: Root.State) => state.apollo.client);
+  yield call(savePlayerData, client, newPlayerData);
   yield put(setPlayerDataComplete(newPlayerData));
 }
 
@@ -114,6 +139,10 @@ function* signInPlayerListener() {
   yield takeEvery(Player.ActionTypes.SignInPlayerRequest, signInPlayer);
 }
 
+function* keepPlayerTokenAliveListener() {
+  yield takeEvery(Player.ActionTypes.SignInPlayerComplete, keepPlayerTokenAlive);
+}
+
 export function* playerSaga() {
   yield all([
     fork(setPlayerDataListener),
@@ -121,5 +150,6 @@ export function* playerSaga() {
     fork(joinGameListener),
     fork(gameCreatedListener),
     fork(unsetCurrentGameIdListener),
+    fork(keepPlayerTokenAliveListener),
   ]);
 }

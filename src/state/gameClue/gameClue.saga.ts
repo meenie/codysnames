@@ -1,25 +1,21 @@
-import { all, call, fork, takeEvery, put } from 'redux-saga/effects';
+import { all, call, fork, takeEvery, put, select } from 'redux-saga/effects';
+import { Apollo } from '../apollo/apollo.types';
 
-import { db } from '../../services/firebase';
 import { GameClue } from './gameClue.types';
 import { createGameClueComplete, createGameClueError } from './gameClue.actions';
-
-const persistGameClue = async (gameClue: Omit<GameClue.Entity, 'id'>) => {
-  const gameClueRef = db.collection('gameClues').doc();
-
-  await gameClueRef.set({
-    ...gameClue,
-    createdAt: window.firebase.firestore.FieldValue.serverTimestamp(),
-  });
-  return {
-    ...gameClue,
-    id: gameClueRef.id,
-  };
-};
+import { Root } from '../root.types';
+import { setGameClue } from './gameClue.graphql';
 
 function* createGameClue(action: GameClue.CreateClueRequest) {
   try {
-    const gameClueData: GameClue.Entity = yield call(persistGameClue, action.gameClue);
+    const client: Apollo.Entity = yield select(
+      (state: Root.State) => state.apollo.client
+    );
+    const gameClueData: GameClue.Entity = yield call(
+      setGameClue,
+      client,
+      action.gameClue
+    );
     yield put(createGameClueComplete(gameClueData));
   } catch (e) {
     yield put(createGameClueError(e));

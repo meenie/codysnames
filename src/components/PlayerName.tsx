@@ -23,7 +23,7 @@ const useStyles = makeStyles((theme: Theme) =>
 
 const PlayerName: React.FC = () => {
   const classes = useStyles();
-  const currentName = useSelector((state: Root.State) => state.player.data.name);
+  const currentName = useSelector((state: Root.State) => state.player.data.name || '');
   const player = useSelector((state: Root.State) => state.player.data);
   const [ name, setName ] = useState(currentName);
   const [ editingName, setEditingName ] = useState(!currentName);

@@ -1,5 +1,7 @@
 import { Action } from 'redux';
 import { Player } from '../player/player.types';
+import { GameCard } from '../gameCard/gameCard.types';
+import { GameClue } from '../gameClue/gameClue.types';
 
 export namespace Game {
   export interface State {
@@ -22,32 +24,43 @@ export namespace Game {
     id: string;
     status: Status;
     turn: TeamColor;
-    doubleAgent: TeamColor;
-    blueSpymaster: Player.Entity;
-    redSpymaster: Player.Entity;
-    blueAgents: Player.Entity[];
-    redAgents: Player.Entity[];
-    blueHasExtraGuess: boolean;
-    redHasExtraGuess: boolean;
-    numberOfGuesses: number;
-    whoWon?: TeamColor;
+    double_agent: TeamColor;
+    blue_spymaster: Player.Entity;
+    red_spymaster: Player.Entity;
+    blue_agents: Player.Entity[];
+    red_agents: Player.Entity[];
+    blue_has_extra_guess: boolean;
+    red_has_extra_guess: boolean;
+    number_of_guesses: number;
+    who_won?: TeamColor;
     clue?: string;
+    created_at: Date;
+    updated_at: Date;
+    cards: GameCard.Entity[];
+    clues: GameClue.Entity[];
+  }
+
+  export interface GamesPlayers {
+    game_id: string;
+    player_id: string;
+    color: TeamColor;
+    is_spymaster: boolean;
   }
 
   export enum Status {
-    Open = 'OPEN',
-    InSession = 'IN_SESSION',
-    Over = 'OVER',
+    Open = 'open',
+    InSession = 'in_session',
+    Over = 'over',
   }
 
   export enum TeamColor {
-    Blue = 'BLUE',
-    Red = 'RED',
+    Blue = 'blue',
+    Red = 'red',
   }
 
   export enum PlayerType {
-    Spymaster = 'SPYMASTER',
-    Agent = 'AGENT',
+    Spymaster = 'spymaster',
+    Agent = 'agent',
   }
 
   export enum ActionTypes {

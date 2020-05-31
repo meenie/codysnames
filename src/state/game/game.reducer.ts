@@ -2,19 +2,24 @@ import produce from 'immer';
 
 import { Game } from './game.types';
 import { blankPlayer } from '../player/player.reducer';
+import { blankCardState } from '../gameCard/gameCard.reducer';
 
 export const blankGame: Game.Entity = {
   id: '',
   status: Game.Status.Open,
   turn: Game.TeamColor.Blue,
-  doubleAgent: Game.TeamColor.Blue,
-  blueSpymaster: blankPlayer,
-  redSpymaster: blankPlayer,
-  blueAgents: [],
-  redAgents: [],
-  blueHasExtraGuess: false,
-  redHasExtraGuess: false,
-  numberOfGuesses: -1,
+  double_agent: Game.TeamColor.Blue,
+  blue_spymaster: blankPlayer,
+  red_spymaster: blankPlayer,
+  blue_agents: [],
+  red_agents: [],
+  blue_has_extra_guess: false,
+  red_has_extra_guess: false,
+  number_of_guesses: -1,
+  created_at: new Date(),
+  updated_at: new Date(),
+  cards: [],
+  clues: [],
 };
 
 export const gameInitialState: Game.State = {
@@ -33,11 +38,36 @@ export const gameInitialState: Game.State = {
   errors: [],
 };
 
+const setDefaults = (game: Game.Entity) => {
+  return produce(game, (draft) => {
+    if (!draft.red_spymaster) {
+      draft.red_spymaster = blankPlayer;
+    }
+    if (!draft.blue_spymaster) {
+      draft.blue_spymaster = blankPlayer;
+    }
+    draft.cards = draft.cards.map((card) => {
+      if (!card.state) {
+        return {
+          ...card,
+          state: {
+            ...blankCardState,
+            id: card.game_card_state_id,
+            game_id: card.game_id,
+          },
+        };
+      } else {
+        return card;
+      }
+    });
+  });
+};
+
 const reducer = (state = gameInitialState, action: Game.Actions) => {
   switch (action.type) {
     case Game.ActionTypes.DatabasePushUpdate:
       return produce(state, (draft) => {
-        draft.data = action.game;
+        draft.data = setDefaults(action.game);
         draft.loaded = true;
       });
 
@@ -52,7 +82,7 @@ const reducer = (state = gameInitialState, action: Game.Actions) => {
       return produce(state, (draft) => {
         draft.leaving = false;
         draft.left = true;
-        draft.data = action.game;
+        draft.data = setDefaults(action.game);
       });
     case Game.ActionTypes.StartGameRequest:
       return produce(state, (draft) => {
@@ -65,7 +95,7 @@ const reducer = (state = gameInitialState, action: Game.Actions) => {
         draft.starting = false;
         draft.started = true;
         draft.loaded = true;
-        draft.data = action.game;
+        draft.data = setDefaults(action.game);
       });
     case Game.ActionTypes.CreateGameRequest:
       return produce(state, (draft) => {
@@ -78,7 +108,7 @@ const reducer = (state = gameInitialState, action: Game.Actions) => {
         draft.creating = false;
         draft.created = true;
         draft.loaded = true;
-        draft.data = action.game;
+        draft.data = setDefaults(action.game);
       });
     case Game.ActionTypes.JoinGameRequest:
       return produce(state, (draft) => {
@@ -91,7 +121,7 @@ const reducer = (state = gameInitialState, action: Game.Actions) => {
         draft.joining = false;
         draft.joined = true;
         draft.loaded = true;
-        draft.data = action.game;
+        draft.data = setDefaults(action.game);
       });
     case Game.ActionTypes.LoadGameRequest:
       return produce(state, (draft) => {
@@ -103,7 +133,7 @@ const reducer = (state = gameInitialState, action: Game.Actions) => {
       return produce(state, (draft) => {
         draft.loading = false;
         draft.loaded = true;
-        draft.data = action.game;
+        draft.data = setDefaults(action.game);
       });
     case Game.ActionTypes.CreateGameError:
     case Game.ActionTypes.JoinGameError:
