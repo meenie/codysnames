@@ -30,7 +30,7 @@ jobs:
           path: ./functions/node_modules
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('functions/yarn.lock') }}
       - name: Install Dependencies
-        run: yarn --frozen-lockfile && yarn --cwd ./functions --frozen-lockfile
+        run: yarn --frozen-lockfile
       - name: Build
         run: yarn build
       - name: Archive Hosting Production Artifact
@@ -43,11 +43,6 @@ jobs:
         with:
           name: functions_files
           path: functions/lib
-      - name: Archive Functions Node Modules Artifact
-        uses: actions/upload-artifact@master
-        with:
-          name: functions_node_modules_files
-          path: functions/node_modules
   deploy_functions:
     name: Deploy Functions
     needs: build
@@ -60,11 +55,15 @@ jobs:
         with:
           name: functions_files
           path: functions/lib
-      - name: Download Node Modules Artifact
-        uses: actions/download-artifact@master
+      - name: Cache functions node modules
+        uses: actions/cache@v1
+        env:
+          cache-name: cache-functions-node-modules
         with:
-          name: functions_node_modules_files
-          path: functions/node_modules
+          path: ./functions/node_modules
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('functions/yarn.lock') }}
+      - name: Install Dependencies
+        run: yarn --cwd ./functions --frozen-lockfile
       - name: Deploy to Firebase
         uses: w9jds/firebase-action@master
         with:
