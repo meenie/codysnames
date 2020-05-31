@@ -1,4 +1,4 @@
-import { all, call, fork, takeEvery, put, select } from 'redux-saga/effects';
+import { all, call, fork, takeEvery, put, select, delay } from 'redux-saga/effects';
 
 import { database, auth } from '../../services/firebase';
 import { Player } from './player.types';
@@ -23,7 +23,7 @@ const signInAnonymously = () => {
     auth.signInAnonymously();
     auth.onAuthStateChanged(async (user) => {
       if (user) {
-        const token = await user.getIdToken();
+        const token = await user.getIdToken(true);
         const idTokenResult = await user.getIdTokenResult();
         const hasuraClaim = idTokenResult.claims['https://hasura.io/jwt/claims'];
         if (hasuraClaim) {
@@ -63,7 +63,6 @@ function* signInPlayer() {
   try {
     const { token, userId } = yield call(signInAnonymously);
 
-    console.log(token);
     const client = makeApolloClient(token);
     yield put(setClient(client));
 
@@ -71,6 +70,16 @@ function* signInPlayer() {
     yield put(signInPlayerComplete(player));
   } catch (error) {
     yield put(signInPlayerError(error));
+  }
+}
+
+function* keepPlayerTokenAlive() {
+  while (true) {
+    yield delay(1e3 * 60 * 5); // 5 mins
+
+    const { token } = yield call(signInAnonymously);
+    const client = makeApolloClient(token);
+    yield put(setClient(client));
   }
 }
 
@@ -130,6 +139,10 @@ function* signInPlayerListener() {
   yield takeEvery(Player.ActionTypes.SignInPlayerRequest, signInPlayer);
 }
 
+function* keepPlayerTokenAliveListener() {
+  yield takeEvery(Player.ActionTypes.SignInPlayerComplete, keepPlayerTokenAlive);
+}
+
 export function* playerSaga() {
   yield all([
     fork(setPlayerDataListener),
@@ -137,5 +150,6 @@ export function* playerSaga() {
     fork(joinGameListener),
     fork(gameCreatedListener),
     fork(unsetCurrentGameIdListener),
+    fork(keepPlayerTokenAliveListener),
   ]);
 }
