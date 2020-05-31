@@ -1,6 +1,5 @@
 import { all, call, fork, takeEvery, put, select } from 'redux-saga/effects';
 import shuffle from 'lodash/shuffle';
-import gql from 'graphql-tag';
 
 import { GameCard } from './gameCard.types';
 import { Game } from '../game/game.types';
@@ -14,55 +13,9 @@ import {
 import { Root } from '../root.types';
 import { getCurrentPlayerColor } from '../player/player.selectors';
 import { Player } from '../player/player.types';
-import { getGameData } from '../game/game.saga';
+import { getGameData } from '../game/game.graphql';
 import { Apollo } from '../apollo/apollo.types';
-
-const flipGameCardState = async (client: Apollo.Entity, gameCardStateId: string) => {
-  return client.mutate({
-    mutation: gql`
-      mutation UpdateGameCardState($id: uuid!) {
-        update_game_card_states_by_pk(pk_columns: { id: $id }, _set: { flipped: true }) {
-          id
-        }
-      }
-    `,
-    variables: {
-      id: gameCardStateId,
-    },
-  });
-};
-
-const createGameCardsData = async (
-  client: Apollo.Entity,
-  gameCards: GameCard.NewEntity[]
-) => {
-  const objects = gameCards.map((card, i) => {
-    return {
-      name: card.name,
-      game_id: card.game_id,
-      order: card.order,
-      state: {
-        data: {
-          game_id: card.game_id,
-          type: card.state.type,
-        },
-      },
-    };
-  }, []);
-
-  return client.mutate({
-    mutation: gql`
-      mutation BulkCreateGameCards($objects: [game_cards_insert_input!]!) {
-        insert_game_cards(objects: $objects) {
-          affected_rows
-        }
-      }
-    `,
-    variables: {
-      objects,
-    },
-  });
-};
+import { createGameCardsData, flipGameCardState } from './gameCard.graphql';
 
 const generateCardTypeMap = (whoIsStarting: GameCard.CardType) => {
   const cardTypeMap = [

@@ -1,5 +1,4 @@
 import { all, call, fork, takeEvery, put, select } from 'redux-saga/effects';
-import gql from 'graphql-tag';
 
 import { database, auth } from '../../services/firebase';
 import { Player } from './player.types';
@@ -17,9 +16,10 @@ import produce from 'immer';
 import { Apollo } from '../apollo/apollo.types';
 import { setClient } from '../apollo/apollo.actions';
 import { makeApolloClient } from '../../services/apollo';
+import { savePlayerData, getPlayerData } from './player.graphql';
 
 const signInAnonymously = () => {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     auth.signInAnonymously();
     auth.onAuthStateChanged(async (user) => {
       if (user) {
@@ -45,44 +45,6 @@ const signInAnonymously = () => {
       }
     });
   });
-};
-
-const savePlayerData = async (client: Apollo.Entity, player: Player.Entity) => {
-  return client.mutate({
-    mutation: gql`
-      mutation UpdatePlayer($id: String!, $_set: players_set_input = {}) {
-        update_players_by_pk(pk_columns: { id: $id }, _set: $_set) {
-          id
-        }
-      }
-    `,
-    variables: {
-      id: player.id,
-      _set: player,
-    },
-  });
-};
-
-const getPlayerData = async (client: Apollo.Entity, userId: string) => {
-  const playerData = await client.query({
-    query: gql`
-      query GetPlayer($id: String!) {
-        players_by_pk(id: $id) {
-          id
-          name
-          current_game_id
-        }
-      }
-    `,
-    variables: {
-      id: userId,
-    },
-  });
-
-  const player = playerData.data.players_by_pk;
-  delete player.__typename;
-
-  return player as Player.Entity;
 };
 
 function* setPlayerData(action: Player.SetPlayerDataRequest) {

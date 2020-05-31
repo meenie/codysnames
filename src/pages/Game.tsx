@@ -12,7 +12,7 @@ import { Game as IGame } from '../state/game/game.types';
 import GameBoard from '../components/GameBoard';
 import Lobby from '../components/Lobby';
 import GameInfo from '../components/GameInfo';
-import { GAME_FIELDS_FRAGMENT } from '../state/game/game.saga';
+import { GAME_FIELDS_FRAGMENT } from '../state/game/game.graphql';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
